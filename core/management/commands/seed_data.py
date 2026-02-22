@@ -55,7 +55,7 @@ class Command(BaseCommand):
         # Voorbeeld: seed Status als model bestaat
         Status = getattr(m, "Status", None)
         if Status:
-            for key, label, scope in [
+            for key, name, scope in [
                 ("open", "Open", "signal"),
                 ("done", "Afgerond", "signal"),
                 ("snoozed", "Gepauzeerd", "signal"),
@@ -63,7 +63,7 @@ class Command(BaseCommand):
                 ("in_progress", "Bezig", "task"),
                 ("completed", "Voltooid", "task"),
             ]:
-                Status.objects.get_or_create(key=key, defaults={"label": label, "scope": scope})
+                Status.objects.get_or_create(key=key, defaults={"name": name, "scope": scope})
             self.stdout.write(self.style.SUCCESS("✅ Seeded Status"))
 
         SignalType = getattr(m, "SignalType", None)

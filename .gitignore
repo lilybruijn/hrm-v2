@@ -1,4 +1,6 @@
 cat > .gitignore <<'EOF'
+.env
+
 # Python
 venv/
 __pycache__/

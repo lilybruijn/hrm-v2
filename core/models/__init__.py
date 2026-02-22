@@ -4,3 +4,5 @@ from .types import *
 from .core import *
 from .notes import *
 from .notifications import *
+from .people import *
+from .history import *
