@@ -13,7 +13,4 @@ class Command(BaseCommand):
             self.stdout.write("Seed skipped (already has data).")
             return
 
-        Person.objects.create(first_name="Test", last_name="Student", person_type="student")
-        Person.objects.create(first_name="Test", last_name="Employee", person_type="employee")
-
         self.stdout.write(self.style.SUCCESS("Seed completed."))
