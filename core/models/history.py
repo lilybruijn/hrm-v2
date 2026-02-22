@@ -4,13 +4,14 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
 
-class Note(models.Model):
+class HistoryEvent(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
 
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
-    body = models.TextField(blank=True)
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
+    action = models.CharField(max_length=50)
+    changes = models.JSONField(default=dict, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -18,4 +19,4 @@ class Note(models.Model):
         ordering = ("-created_at",)
 
     def __str__(self):
-        return f"Note #{self.id}"
+        return f"{self.action} #{self.id}"
