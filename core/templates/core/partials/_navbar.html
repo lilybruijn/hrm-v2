@@ -1,0 +1,30 @@
+<header class="navbar">
+    <div class="container navbar-inner">
+        <div class="navbar-left">
+            <button class="icon-btn mobile-toggle" type="button" data-sidebar-toggle aria-label="Toggle menu">
+                <span class="icon">☰</span>
+            </button>
+
+            <div class="crumbs">
+                <span class="crumb muted">HRM</span>
+                <span class="crumb-sep">/</span>
+                <span class="crumb">{% block breadcrumb %}Dashboard{% endblock %}</span>
+            </div>
+        </div>
+
+        <div class="navbar-right">
+            <div class="search">
+                <span class="search-ico">⌕</span>
+                <input class="search-input" type="text" placeholder="Zoeken (later)..." disabled>
+            </div>
+
+            <a class="icon-badge disabled" href="#" title="Notificaties (later)">
+                🔔 <span class="badge">0</span>
+            </a>
+
+            <div class="user-mini">
+                <div class="avatar sm">{{ request.user.username|default:"?"|slice:":1"|upper }}</div>
+            </div>
+        </div>
+    </div>
+</header>

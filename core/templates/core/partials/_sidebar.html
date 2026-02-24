@@ -1,0 +1,64 @@
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-top">
+        <a class="brand" href="{% url 'dashboard' %}">
+            <span class="brand-dot"></span>
+            <span class="brand-text">HRM</span>
+            <span class="brand-badge">v2</span>
+        </a>
+
+        <button class="icon-btn sidebar-toggle" type="button" data-sidebar-toggle aria-label="Toggle menu">
+            <span class="icon">☰</span>
+        </button>
+    </div>
+
+    <nav class="nav">
+        <div class="nav-section">
+            <div class="nav-label">Menu</div>
+
+            <a class="nav-item {% if active_nav == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+                <span class="nav-ico">🏠</span>
+                <span>Dashboard</span>
+            </a>
+
+            <a class="nav-item disabled" href="#" title="Komt later">
+                <span class="nav-ico">🚩</span>
+                <span>Signals</span>
+                <span class="pill">soon</span>
+            </a>
+
+            <a class="nav-item disabled" href="#" title="Komt later">
+                <span class="nav-ico">✅</span>
+                <span>Tasks</span>
+                <span class="pill">soon</span>
+            </a>
+
+            <a class="nav-item disabled" href="#" title="Komt later">
+                <span class="nav-ico">✉️</span>
+                <span>Inbox</span>
+                <span class="pill">soon</span>
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-label">Beheer</div>
+            <a class="nav-item" href="/admin/">
+                <span class="nav-ico">🛠️</span>
+                <span>Admin</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="sidebar-bottom">
+        <div class="user-chip">
+            <div class="avatar">{{ request.user.username|default:"?"|slice:":1"|upper }}</div>
+            <div class="user-chip-meta">
+                <div class="user-chip-name">{{ request.user.username|default:"-" }}</div>
+                <div class="user-chip-role">Superuser</div>
+            </div>
+        </div>
+
+        <a class="btn btn-ghost btn-block" href="{% url 'logout' %}">
+            Uitloggen
+        </a>
+    </div>
+</aside>

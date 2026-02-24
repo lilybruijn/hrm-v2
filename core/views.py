@@ -1,8 +1,16 @@
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.views import LoginView, LogoutView
 from django.shortcuts import render
 
-# Create your views here.
 
-from django.http import HttpResponse
+class AppLoginView(LoginView):
+    template_name = "core/auth/login.html"
 
+
+class AppLogoutView(LogoutView):
+    pass
+
+
+@login_required
 def dashboard(request):
-    return HttpResponse("HRM v2 is live ✅")
+    return render(request, "core/dashboard.html", {"active_nav": "dashboard"})

@@ -1,0 +1,56 @@
+{% load static %}
+<!doctype html>
+<html lang="nl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}HRM{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+
+    <link rel="stylesheet" href="{% static 'core/css/app.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+    <div class="app">
+        {% include "core/partials/_sidebar.html" %}
+
+        <div class="main">
+            {% include "core/partials/_navbar.html" %}
+
+            <main class="content">
+                <div class="container">
+                    {% include "core/partials/_messages.html" %}
+
+                    <div class="page-head">
+                        <div>
+                            <h1 class="page-title">{% block page_title %}{% endblock %}</h1>
+                            {% block page_subtitle %}{% endblock %}
+                        </div>
+
+                        <div class="page-actions">
+                            {% block page_actions %}{% endblock %}
+                        </div>
+                    </div>
+
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+
+            <footer class="footer">
+                <div class="container footer-inner">
+                    <span class="muted">HRM v2</span>
+                    <span class="muted">© {{ now|default:"" }}</span>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <script src="{% static 'core/js/app.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
