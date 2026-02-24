@@ -1,0 +1,98 @@
+{% extends "core/base.html" %}
+{% block title %}Dashboard · HRM{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}<p class="muted">Sneat-style shell staat. Volgende stap: Signals, Tasks, Inbox.</p>{% endblock %}
+
+{% block page_actions %}
+<a class="btn btn-primary disabled" href="#" title="Komt later">Nieuwe task</a>
+{% endblock %}
+
+{% block content %}
+<div class="grid grid-3">
+    <div class="card">
+        <div class="card-head">
+            <div>
+                <div class="card-kicker">Signals</div>
+                <div class="card-title">Open</div>
+            </div>
+            <div class="metric">0</div>
+        </div>
+        <div class="card-body">
+            <div class="muted">Hier komt straks je “open signals” overzicht.</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-head">
+            <div>
+                <div class="card-kicker">Tasks</div>
+                <div class="card-title">Due soon</div>
+            </div>
+            <div class="metric">0</div>
+        </div>
+        <div class="card-body">
+            <div class="muted">Hier komt straks je “taken met deadline” blok.</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-head">
+            <div>
+                <div class="card-kicker">Inbox</div>
+                <div class="card-title">Nieuw</div>
+            </div>
+            <div class="metric">0</div>
+        </div>
+        <div class="card-body">
+            <div class="muted">Hier komt straks je berichten/inbox systeem.</div>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-2 mt-16">
+    <div class="card">
+        <div class="card-head">
+            <div>
+                <div class="card-title">Recente activiteit</div>
+                <div class="muted">HistoryEvent (straks)</div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="list">
+                <div class="list-row">
+                    <div class="dot"></div>
+                    <div class="list-main">
+                        <div class="list-title">Voorbeeld item</div>
+                        <div class="muted">Zo gaat je activity feed er uitzien.</div>
+                    </div>
+                    <div class="muted">nu</div>
+                </div>
+                <div class="list-row">
+                    <div class="dot"></div>
+                    <div class="list-main">
+                        <div class="list-title">Nog een item</div>
+                        <div class="muted">Later vullen we dit met echte data.</div>
+                    </div>
+                    <div class="muted">nu</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-head">
+            <div>
+                <div class="card-title">Snelkoppelingen</div>
+                <div class="muted">Handig om te bouwen</div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="stack">
+                <a class="btn btn-soft" href="/admin/">Open Django Admin</a>
+                <button class="btn btn-soft" disabled>Maak signal (soon)</button>
+                <button class="btn btn-soft" disabled>Maak task (soon)</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
