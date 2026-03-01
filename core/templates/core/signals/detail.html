@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+{% load helpers %}
+{% block title %}Melding #{{ signal.id }}{% endblock %}
+{% block content %}
+<div class="container py-4">
+
+    <!-- Header -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+        <div>
+            <h1 class="h3 mb-1">Melding #{{ signal.id }}</h1>
+            <div class="text-muted small">
+                <span class="me-2">{{ signal.type.name }}</span>
+                <span class="me-2">•</span>
+                <span>{{ signal.active_from|date:"d-m-Y" }}</span>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 align-items-stretch">
+
+            <a class="btn btn-outline-secondary d-flex align-items-center"
+               href="{% url 'signals:list' %}">
+                ← Terug
+            </a>
+
+            <form method="post"
+                  action="{% url 'signals:toggle_archive' signal.id %}"
+                  class="d-inline">
+                {% csrf_token %}
+                {% if signal.is_archived %}
+                <button class="btn btn-success">
+                    Terugzetten
+                </button>
+                {% else %}
+                <button class="btn btn-outline-danger">
+                    Archiveren
+                </button>
+                {% endif %}
+            </form>
+
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Left column -->
+        <div class="col-12 col-lg-7">
+            <!-- Omschrijving -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+
+                    <div class="d-flex align-items-start justify-content-between gap-3">
+                        <h5 class="card-title mb-0">Omschrijving</h5>
+
+                        <div class="d-flex align-items-center gap-2">
+                            {% if signal.status %}
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                {{ signal.status.name }}
+                            </span>
+                            {% endif %}
+
+                            <button class="btn btn-sm btn-outline-secondary"
+                                    type="button"
+                                    onclick="toggleBodyEdit()">
+                                ✏ Bewerken
+                            </button>
+                        </div>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <!-- View mode -->
+                    <div id="body-view">
+                        <div class="text-body">
+                            {{ signal.body|linebreaksbr }}
+                        </div>
+                    </div>
+
+                    <!-- Edit mode -->
+                    <div id="body-edit" style="display:none;">
+                        <form method="post" action="{% url 'signals:signal_update' signal.id %}">
+                            {% csrf_token %}
+
+                            {{ form.type.as_hidden }}
+                            {{ form.active_from.as_hidden }}
+                            {{ form.status.as_hidden }}
+                            {{ form.assigned_to.as_hidden }}
+
+                            {{ form.body }}
+
+                            <div class="d-flex gap-2 mt-3">
+                                <button class="btn btn-primary btn-sm" type="submit">Opslaan</button>
+                                <button class="btn btn-outline-secondary btn-sm" type="button" onclick="toggleBodyEdit()">Annuleren</button>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Notities -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h5 class="card-title mb-0">Notities</h5>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <form method="post" action="{% url 'signals:add_note' signal.id %}" class="mb-3"
+                          autocomplete="off">
+                        {% csrf_token %}
+
+                        <div class="mb-2">
+                            {{ note_form.body }}
+                        </div>
+
+                        <button class="btn btn-primary" type="submit">Notitie toevoegen</button>
+                    </form>
+
+                    <div class="list-group list-group-flush">
+                        {% for n in notes %}
+                        <div class="list-group-item px-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="fw-semibold">{{ n.author.username }}</div>
+                                <div class="text-muted small">{{ n.created_at|date:"d-m-Y H:i" }}</div>
+                            </div>
+                            <div class="mt-1">
+                                {{ n.body|linebreaksbr }}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-muted">Nog geen notities.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right column -->
+        <div class="col-12 col-lg-5">
+
+            <!-- Beheer -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-0">Beheer</h5>
+                    <hr class="my-3">
+
+                    <form method="post"
+                          action="{% url 'signals:signal_update' signal.id %}"
+                          class="stack"
+                          autocomplete="off">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Actief vanaf</label>
+                            {{ form.active_from }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Type</label>
+                            {{ form.type }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Status</label>
+                            {{ form.status }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Toegewezen aan</label>
+                            {{ form.assigned_to }}
+                            <div class="form-text">Leeg laten = niet toegewezen</div>
+                        </div>
+
+                        <button class="btn btn-primary w-100 mt-2" type="submit">
+                            Wijzigingen opslaan
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Geschiedenis -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-0">Geschiedenis</h5>
+                    <hr class="my-3">
+
+                    <div class="accordion" id="historyAccordion">
+                        {% for h in history %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="h-{{ forloop.counter }}">
+                                <button class="accordion-button collapsed" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#hc-{{ forloop.counter }}"
+                                        aria-expanded="false" aria-controls="hc-{{ forloop.counter }}">
+                                    <div class="w-100 d-flex justify-content-between align-items-center gap-3">
+                                        <span class="text-truncate">
+                                            
+                                            <span class="text-muted small ms-2">
+                                                <strong>{{ h.action_label }}</strong> door <strong>{{ h.actor.username|default:"-" }}</strong>
+                                            </span>
+                                        </span>
+                                        <span class="text-muted small">{{ h.created_at|date:"d-m-Y H:i" }}</span>
+                                    </div>
+                                </button>
+                            </h2>
+
+                            <div id="hc-{{ forloop.counter }}" class="accordion-collapse collapse"
+                                 aria-labelledby="h-{{ forloop.counter }}" data-bs-parent="#historyAccordion">
+                                <div class="accordion-body">
+                                    {% if h.changes %}
+                                    <div class="list-group list-group-flush small">
+                                        {% for field, values in h.changes.items %}
+                                        {% with old=values.0 new=values.1 %}
+                                        <div class="list-group-item px-0 py-2">
+                                            <div class="fw-semibold mb-1">
+                                                {% if field == "status_id" %}Status
+                                                {% elif field == "type_id" %}Type
+                                                {% elif field == "assigned_to_id" %}Toegewezen aan
+                                                {% elif field == "active_from" %}Actief vanaf
+                                                {% elif field == "body" %}Omschrijving
+                                                {% elif field == "is_archived" %}Archiefstatus
+                                                {% else %}{{ field }}
+                                                {% endif %}
+                                            </div>
+
+                                            <div>
+                                                <span class="text-muted">
+                                                    {% if field == "status_id" %}
+                                                    {{ status_map|get_item:old|default:"–" }}
+                                                    {% elif field == "type_id" %}
+                                                    {{ type_map|get_item:old|default:"–" }}
+                                                    {% elif field == "assigned_to_id" %}
+                                                    {{ user_map|get_item:old|default:"–" }}
+                                                    {% elif field == "is_archived" %}
+                                                    {% if old %}Gearchiveerd{% else %}Niet gearchiveerd{% endif %}
+                                                    {% else %}
+                                                    {{ old|default:"–" }}
+                                                    {% endif %}
+                                                </span>
+
+                                                <span class="mx-2">→</span>
+
+                                                <span class="text-success fw-semibold">
+                                                    {% if field == "status_id" %}
+                                                    {{ status_map|get_item:new|default:"–" }}
+                                                    {% elif field == "type_id" %}
+                                                    {{ type_map|get_item:new|default:"–" }}
+                                                    {% elif field == "assigned_to_id" %}
+                                                    {{ user_map|get_item:new|default:"–" }}
+                                                    {% elif field == "is_archived" %}
+                                                    {% if new %}Gearchiveerd{% else %}Niet gearchiveerd{% endif %}
+                                                    {% else %}
+                                                    {{ new|default:"–" }}
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {% endwith %}
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    <div class="text-muted">Geen details.</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-muted">Geen history.</div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<script>function toggleBodyEdit() {
+    const view = document.getElementById("body-view");
+    const edit = document.getElementById("body-edit");
+
+    if (edit.style.display === "none") {
+        edit.style.display = "block";
+        view.style.display = "none";
+
+        const textarea = edit.querySelector("textarea");
+        if (textarea) textarea.focus();
+    } else {
+        edit.style.display = "none";
+        view.style.display = "block";
+    }
+}</script>
+{% endblock %}

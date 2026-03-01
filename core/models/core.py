@@ -24,13 +24,14 @@ class Signal(TimeStampedModel):
         help_text="Leeg = zichtbaar voor alle users (default)."
     )
 
-    active_from = models.DateTimeField(default=timezone.now)
+    active_from = models.DateField(default=timezone.localdate)
     status = models.ForeignKey(Status, on_delete=models.PROTECT, null=True, blank=True, related_name="signals")
     notes = GenericRelation(Note, related_query_name="signals")
     history = GenericRelation(HistoryEvent, related_query_name="signals")
 
     body = models.TextField()  # alleen omschrijving, geen aparte title
     is_archived = models.BooleanField(default=False)
+
 
     def __str__(self):
         return f"Signal #{self.id}"

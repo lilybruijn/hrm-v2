@@ -20,10 +20,9 @@
                 <span>Dashboard</span>
             </a>
 
-            <a class="nav-item disabled" href="#" title="Komt later">
+            <a class="nav-item {% if active_nav == 'signals' %}active{% endif %}" href="{% url 'signals:list' %}">
                 <span class="nav-ico">🚩</span>
                 <span>Signals</span>
-                <span class="pill">soon</span>
             </a>
 
             <a class="nav-item disabled" href="#" title="Komt later">
