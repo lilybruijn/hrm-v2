@@ -10,5 +10,8 @@ urlpatterns = [
     path("signals/", include("core.signals.urls", namespace="signals")),
 
     ## ACTIVITIES
-    path("activities/", include("core.activities.urls", namespace="activities"))
+    path("activities/", include("core.activities.urls", namespace="activities")),
+
+    ## PEOPLE
+    path("people/", include("core.people.urls", namespace="people"))
 ]

@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}People{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-header row">
+        <div class="col-md-8 mb-3">
+            <h1>People</h1>
+            <p class="muted mb-0">Overzicht van studenten en medewerkers</p>
+        </div>
+        <div class="col-md-4 mb-3" style="display:flex; align-items:flex-end; justify-content:flex-end;">
+            <a class="btn btn-primary" href="{% url 'people:create' %}">+ Nieuwe persoon</a>
+        </div>
+    </div>
+
+    <form method="get" class="card mb-3" autocomplete="off">
+        <div class="card-body">
+            <div class="row g-2 align-items-end">
+
+                <div class="col-12 col-md-6">
+                    <label class="form-label mb-1">Zoeken</label>
+                    <input class="form-control" type="text" name="q" placeholder="Naam, email, telefoon..."
+                           value="{{ q }}">
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label mb-1">Type</label>
+                    <select class="form-select" name="type">
+                        <option value="">Alles</option>
+                        {% for value, label in type_choices %}
+                        <option value="{{ value }}" {% if person_type == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-3 d-grid">
+                    <button class="btn btn-primary" type="submit">Filter</button>
+                </div>
+
+                {% if q or person_type or sort or dir %}
+                <div class="col-12 mt-2">
+                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'people:list' %}">Reset</a>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </form>
+
+    <div class="card p-3">
+        <div class="table-responsive">
+            <table class="table table-sm align-middle">
+                <thead class="table-light">
+                    <tr>
+                        {# sort toggles #}
+                        {% with next_dir="asc" %}
+                        {% if sort == "name" and dir == "asc" %}{% with next_dir="desc" %}{% endwith %}{% endif %}
+                        <th>
+                            <a href="?q={{ q }}&type={{ person_type }}&sort=name&dir={% if sort == 'name' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                                Naam {% if sort == "name" %}{% if dir == "asc" %}▲{% else %}▼{% endif %}{% endif %}
+                            </a>
+                        </th>
+                        {% endwith %}
+
+                        <th>
+                            <a href="?q={{ q }}&type={{ person_type }}&sort=type&dir={% if sort == 'type' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                                Type {% if sort == "type" %}{% if dir == "asc" %}▲{% else %}▼{% endif %}{% endif %}
+                            </a>
+                        </th>
+
+                        <th>
+                            <a href="?q={{ q }}&type={{ person_type }}&sort=email&dir={% if sort == 'email' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                                Email {% if sort == "email" %}{% if dir == "asc" %}▲{% else %}▼{% endif %}{% endif %}
+                            </a>
+                        </th>
+
+                        <th>
+                            <a href="?q={{ q }}&type={{ person_type }}&sort=phone&dir={% if sort == 'phone' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                                Telefoon {% if sort == "phone" %}{% if dir == "asc" %}▲{% else %}▼{% endif %}{% endif %}
+                            </a>
+                        </th>
+
+                        <th>
+                            <a href="?q={{ q }}&type={{ person_type }}&sort=created_at&dir={% if sort == 'created_at' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                                Aangemaakt {% if sort == "created_at" %}{% if dir == "asc" %}▲{% else %}▼{% endif %}{% endif %}
+                            </a>
+                        </th>
+
+                        <th class="text-end"></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for p in people %}
+                    <tr>
+                        <td class="fw-semibold">{{ p.first_name }} {{ p.last_name }}</td>
+                        <td>
+                            {% if p.person_type == "student" %}
+                            <span class="badge bg-secondary">Student</span>
+                            {% elif p.person_type == "employee" %}
+                            <span class="badge bg-secondary">Medewerker</span>
+                            {% else %}
+                            <span class="text-muted">–</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if p.email %}
+                            {{ p.email }}
+                            {% else %}
+                            <span class="text-muted">–</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if p.phone %}
+                            {{ p.phone }}
+                            {% else %}
+                            <span class="text-muted">–</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted">{{ p.created_at|date:"d-m-Y" }}</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-primary" href="{% url 'people:detail' p.id %}">
+                                Open
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            Geen personen gevonden.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+        <a class="btn btn-sm"
+           href="?page={{ page_obj.previous_page_number }}&q={{ q }}&type={{ person_type }}&sort={{ sort }}&dir={{ dir }}">←</a>
+        {% endif %}
+
+        <span class="muted">Pagina {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+
+        {% if page_obj.has_next %}
+        <a class="btn btn-sm"
+           href="?page={{ page_obj.next_page_number }}&q={{ q }}&type={{ person_type }}&sort={{ sort }}&dir={{ dir }}">→</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
