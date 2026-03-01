@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}
+  {% if mode == "create" %}Nieuwe melding{% else %}Melding aanpassen{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container py-3" style="max-width: 900px;">
+
+    <!-- Header -->
+    <div class="mb-3">
+        <h1 class="h5 mb-1">
+            {% if mode == "create" %}Nieuwe melding{% else %}Melding aanpassen{% endif %}
+        </h1>
+        <div class="text-muted small">Maak of wijzig een melding</div>
+    </div>
+
+    <form method="post" class="card shadow-sm">
+        {% csrf_token %}
+
+        <div class="card-body p-3">
+
+            {{ form.non_field_errors }}
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <label class="form-label small">Type</label>
+                    {{ form.type }}
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label small">Actief vanaf</label>
+                    {{ form.active_from }}
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label small">Toegewezen aan</label>
+                    {{ form.assigned_to }}
+                    <div class="form-text small">Leeg = zichtbaar voor iedereen</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label small">Status</label>
+                    {{ form.status }}
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label small">Omschrijving</label>
+                    {{ form.body }}
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="card-footer d-flex justify-content-between p-3">
+            <a class="btn btn-outline-secondary btn-sm" href="{% url 'signals:list' %}">
+                Annuleren
+            </a>
+            <button class="btn btn-primary btn-sm" type="submit">
+                Opslaan
+            </button>
+        </div>
+
+    </form>
+
+</div>
+{% endblock %}
