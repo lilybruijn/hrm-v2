@@ -8,4 +8,7 @@ urlpatterns = [
 
     ## SIGNALS
     path("signals/", include("core.signals.urls", namespace="signals")),
+
+    ## ACTIVITIES
+    path("activities/", include("core.activities.urls", namespace="activities"))
 ]

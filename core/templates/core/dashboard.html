@@ -54,27 +54,39 @@
         <div class="card-head">
             <div>
                 <div class="card-title">Recente activiteit</div>
-                <div class="muted">HistoryEvent (straks)</div>
             </div>
+            <a class="btn btn-soft" href="{% url 'activities:list' %}">Bekijk alles</a>
         </div>
         <div class="card-body">
             <div class="list">
-                <div class="list-row">
-                    <div class="dot"></div>
-                    <div class="list-main">
-                        <div class="list-title">Voorbeeld item</div>
-                        <div class="muted">Zo gaat de activity feed er uitzien.</div>
+                {% for a in activities %}
+                <div class="list-row d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle {{ a.color }}" style="width:10px;height:10px;"></div>
+
+                        <div>
+                            <div class="fw-semibold">
+                                {% if a.url %}
+                                <a href="{{ a.url }}" class="text-decoration-none">
+                                    {{ a.title }}
+                                </a>
+                                {% else %}
+                                {{ a.title }}
+                                {% endif %}
+                            </div>
+                            <div class="text-muted small">
+                                {{ a.subtitle }}
+                            </div>
+                        </div>
                     </div>
-                    <div class="muted">nu</div>
-                </div>
-                <div class="list-row">
-                    <div class="dot"></div>
-                    <div class="list-main">
-                        <div class="list-title">Nog een item</div>
-                        <div class="muted">Later vullen we dit met echte data.</div>
+
+                    <div class="text-muted small">
+                        {{ a.time|date:"d-m H:i" }}
                     </div>
-                    <div class="muted">nu</div>
                 </div>
+                {% empty %}
+                <div class="text-muted">Nog geen recente activiteit.</div>
+                {% endfor %}
             </div>
         </div>
     </div>
@@ -83,15 +95,14 @@
         <div class="card-head">
             <div>
                 <div class="card-title">Snelkoppelingen</div>
-                <div class="muted">Handig om te bouwen</div>
             </div>
         </div>
         <div class="card-body">
             <div class="stack">
-                <a class="btn btn-soft" href="/admin/">Open Django Admin</a>
-                <button class="btn btn-soft" disabled>Maak signal (soon)</button>
+                <a class="btn btn-soft" href="/admin/">Open Admin Portal</a>
+                <a class="btn btn-soft" href="{% url 'signals:create' %}">Maak signal</a>
                 <button class="btn btn-soft" disabled>Maak task (soon)</button>
-            </div>
+</div>
         </div>
     </div>
 </div>

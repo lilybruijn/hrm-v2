@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Activiteiten{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-header row">
+        <div class="col-md-8 mb-3">
+            <h1>Activiteiten</h1>
+            <p class="muted mb-0">Alle systeemacties (excl. notifications)</p>
+        </div>
+    </div>
+
+    <form method="get" class="card mb-3" autocomplete="off">
+        <div class="card-body">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-5">
+                    <label class="form-label mb-1">Zoeken</label>
+                    <input class="form-control" name="q" value="{{ q }}" placeholder="Gebruiker, actie, changes...">
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label mb-1">Actie</label>
+                    <select class="form-select" name="action">
+                        <option value="">Alles</option>
+                        {% for a in actions %}
+                        <option value="{{ a.value }}" {% if action == a.value %}selected{% endif %}>
+                            {{ a.label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label mb-1">Object</label>
+                    <select class="form-select" name="model">
+                        <option value="">Alles</option>
+                        {% for m in models %}
+                        <option value="{{ m }}" {% if model == m %}selected{% endif %}>{{ m }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-1 d-grid">
+                    <button class="btn btn-primary" type="submit">Filter</button>
+                </div>
+
+                {% if request.GET %}
+                <div class="col-12 mt-2">
+                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'activities:list' %}">Reset</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+
+    <div class="card p-3">
+        <div class="table-responsive">
+            <table class="table table-sm align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Wanneer</th>
+                        <th>Actie</th>
+                        <th>Wie</th>
+                        <th>Object</th>
+                        <th class="text-end"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in events %}
+                    <tr>
+                        <td class="text-muted">{{ e.created_at|date:"d-m-Y H:i" }}</td>
+                        <td><strong>{{ e.action_label }}</strong></td>
+                        <td>{{ e.actor_label }}</td>
+                        <td class="text-muted">{{ e.model }} #{{ e.object_id }}</td>
+                        <td class="text-end">
+                            {% if e.url %}
+                            <a class="btn btn-sm btn-outline-primary" href="{{ e.url }}">Open</a>
+                            {% else %}
+                            <span class="text-muted">–</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">Geen activiteiten gevonden.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+        <a class="btn btn-sm"
+           href="?page={{ page_obj.previous_page_number }}&q={{ q }}&action={{ action }}&model={{ model }}">←</a>
+        {% endif %}
+        <span class="muted">Pagina {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a class="btn btn-sm"
+           href="?page={{ page_obj.next_page_number }}&q={{ q }}&action={{ action }}&model={{ model }}">→</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
