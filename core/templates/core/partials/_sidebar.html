@@ -20,21 +20,32 @@
                 <span>Dashboard</span>
             </a>
 
+            <a class="nav-item {% if active_nav == 'activities' %}active{% endif %}"
+               href="{% url 'activities:list' %}">
+                <span class="nav-ico">🕘</span>
+                <span>Activiteiten</span>
+            </a>
+
             <a class="nav-item {% if active_nav == 'signals' %}active{% endif %}" href="{% url 'signals:list' %}">
-                <span class="nav-ico">🚩</span>
-                <span>Signals</span>
+                <span class="nav-ico">📌</span>
+                <span>Meldingen</span>
+            </a>
+
+            <a class="nav-item {% if active_nav == 'people' %}active{% endif %}" href="{% url 'people:list' %}">
+                <span class="nav-ico">👤</span>
+                <span>Personen</span>
             </a>
 
             <a class="nav-item disabled" href="#" title="Komt later">
                 <span class="nav-ico">✅</span>
-                <span>Tasks</span>
-                <span class="pill">soon</span>
+                <span>Taken</span>
+                <span class="pill">binnenkort</span>
             </a>
 
             <a class="nav-item disabled" href="#" title="Komt later">
                 <span class="nav-ico">✉️</span>
                 <span>Inbox</span>
-                <span class="pill">soon</span>
+                <span class="pill">binnenkort</span>
             </a>
         </div>
 

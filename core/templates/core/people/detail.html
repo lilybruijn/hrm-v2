@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% block title %}{{ person.first_name }} {{ person.last_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+        <div>
+            <h1 class="h3 mb-1">{{ person.first_name }} {{ person.last_name }}</h1>
+            <div class="text-muted small">
+                {% if person.person_type == "student" %}Student{% elif person.person_type == "employee" %}Medewerker{% else %}Persoon{% endif %}
+                <span class="mx-2">•</span>
+                Aangemaakt: {{ person.created_at|date:"d-m-Y" }}
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 align-items-stretch">
+            <a class="btn btn-outline-secondary d-flex align-items-center" href="{% url 'people:list' %}">
+                ← Terug
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Left column -->
+        <div class="col-12 col-lg-7">
+
+            <!-- Gegevens -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between gap-3">
+                        <h5 class="card-title mb-0">Gegevens</h5>
+                        <span class="badge bg-secondary">
+                            {% if person.person_type == "student" %}Student{% elif person.person_type == "employee" %}Medewerker{% else %}–{% endif %}
+                        </span>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <div class="text-muted small">Email</div>
+                            <div>{% if person.email %}{{ person.email }}{% else %}<span class="text-muted">–</span>{% endif %}</div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="text-muted small">Telefoon</div>
+                            <div>{% if person.phone %}{{ person.phone }}{% else %}<span class="text-muted">–</span>{% endif %}</div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="text-muted small">Opmerkingen</div>
+                            <div>
+                                {% if person.notes %}
+                                {{ person.notes|linebreaksbr }}
+                                {% else %}
+                                <span class="text-muted">–</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Notities (Note model) -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h5 class="card-title mb-0">Notities</h5>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <form method="post" action="{% url 'people:add_note' person.id %}" class="mb-3" autocomplete="off">
+                        {% csrf_token %}
+                        <textarea class="form-control" name="body" rows="3" placeholder="Nieuwe notitie..."></textarea>
+                        <button class="btn btn-primary mt-2" type="submit">Notitie toevoegen</button>
+                    </form>
+
+                    <div class="list-group list-group-flush">
+                        {% for n in notes %}
+                        <div class="list-group-item px-0">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="fw-semibold">{{ n.author.username }}</div>
+                                <div class="text-muted small">{{ n.created_at|date:"d-m-Y H:i" }}</div>
+                            </div>
+                            <div class="mt-1">
+                                {{ n.body|linebreaksbr }}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-muted">Nog geen notities.</div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right column -->
+        <div class="col-12 col-lg-5">
+
+            <!-- Beheer -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-0">Beheer</h5>
+                    <hr class="my-3">
+
+                    <form method="post" action="{% url 'people:update' person.id %}" autocomplete="off">
+                        {% csrf_token %}
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Type</label>
+                                {{ form.person_type }}
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">Voornaam</label>
+                                {{ form.first_name }}
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">Achternaam</label>
+                                {{ form.last_name }}
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Email</label>
+                                {{ form.email }}
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Telefoon</label>
+                                {{ form.phone }}
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Opmerkingen</label>
+                                {{ form.notes }}
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary w-100 mt-3" type="submit">
+                            Wijzigingen opslaan
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Geschiedenis -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-0">Geschiedenis</h5>
+                    <hr class="my-3">
+
+                    <div class="accordion" id="historyAccordion">
+                        {% for h in history %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="h-{{ forloop.counter }}">
+                                <button class="accordion-button collapsed" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#hc-{{ forloop.counter }}"
+                                        aria-expanded="false" aria-controls="hc-{{ forloop.counter }}">
+                                    <div class="w-100 d-flex justify-content-between align-items-center gap-3">
+                                        <span class="text-truncate">
+                                            <strong>{{ h.action_label }}</strong>
+                                            <span class="text-muted small ms-2">
+                                                door <strong>{{ h.actor.username|default:"Systeem" }}</strong>
+                                            </span>
+                                        </span>
+                                        <span class="text-muted small">{{ h.created_at|date:"d-m-Y H:i" }}</span>
+                                    </div>
+                                </button>
+                            </h2>
+
+                            <div id="hc-{{ forloop.counter }}" class="accordion-collapse collapse"
+                                 aria-labelledby="h-{{ forloop.counter }}" data-bs-parent="#historyAccordion">
+                                <div class="accordion-body">
+                                    {% if h.changes %}
+                                    <div class="list-group list-group-flush small">
+                                        {% for field, values in h.changes.items %}
+                                        {% with old=values.0 new=values.1 %}
+                                        <div class="list-group-item px-0 py-2">
+                                            <div class="fw-semibold mb-1">
+                                                {% if field == "person_type" %}Type
+                                                {% elif field == "first_name" %}Voornaam
+                                                {% elif field == "last_name" %}Achternaam
+                                                {% elif field == "email" %}Email
+                                                {% elif field == "phone" %}Telefoon
+                                                {% elif field == "notes" %}Interne notitie
+                                                {% else %}{{ field }}
+                                                {% endif %}
+                                            </div>
+
+                                            <div>
+                                                <span class="text-muted">
+                                                    {% if field == "person_type" %}
+                                                    {% if old == "student" %}Student{% elif old == "employee" %}Medewerker{% else %}–{% endif %}
+                                                    {% else %}
+                                                    {{ old|default:"–" }}
+                                                    {% endif %}
+                                                </span>
+
+                                                <span class="mx-2">→</span>
+
+                                                <span class="text-success fw-semibold">
+                                                    {% if field == "person_type" %}
+                                                    {% if new == "student" %}Student{% elif new == "employee" %}Medewerker{% else %}–{% endif %}
+                                                    {% else %}
+                                                    {{ new|default:"–" }}
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {% endwith %}
+                                        {% endfor %}
+                                    </div>
+                                    {% else %}
+                                    <div class="text-muted">Geen details.</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-muted">Geen history.</div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+{% endblock %}
