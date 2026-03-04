@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Nieuwe task{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-header row">
+        <div class="col-md-8 mb-3">
+            <h1>Nieuwe task</h1>
+            <p class="muted mb-0">Maak een nieuwe taak aan</p>
+        </div>
+        <div class="col-md-4 mb-3" style="display:flex; align-items:flex-end; justify-content:flex-end;">
+            <a class="btn btn-outline-secondary" href="{% url 'tasks:list' %}">← Terug</a>
+        </div>
+    </div>
+
+    <div class="card p-3">
+        <form method="post" autocomplete="off">
+            {% csrf_token %}
+
+            <div class="row g-3">
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Type</label>
+                    {{ form.type }}
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Status</label>
+                    {{ form.status }}
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Toegewezen aan</label>
+                    {{ form.assigned_to }}
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Deadline</label>
+                    {{ form.due_date }}
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Omschrijving</label>
+                    {{ form.body }}
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-primary" type="submit">Aanmaken</button>
+                <a class="btn btn-outline-secondary" href="{% url 'tasks:list' %}">Annuleren</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

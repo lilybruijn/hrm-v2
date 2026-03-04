@@ -13,5 +13,8 @@ urlpatterns = [
     path("activities/", include("core.activities.urls", namespace="activities")),
 
     ## PEOPLE
-    path("people/", include("core.people.urls", namespace="people"))
+    path("people/", include("core.people.urls", namespace="people")),
+
+    ## TASKS
+    path("tasks/", include("core.tasks.urls")),
 ]

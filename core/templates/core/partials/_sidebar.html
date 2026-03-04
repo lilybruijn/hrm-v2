@@ -36,10 +36,9 @@
                 <span>Personen</span>
             </a>
 
-            <a class="nav-item disabled" href="#" title="Komt later">
+            <a class="nav-item {% if active_nav == 'tasks' %}active{% endif %}" href="{% url 'tasks:list' %}">
                 <span class="nav-ico">✅</span>
                 <span>Taken</span>
-                <span class="pill">binnenkort</span>
             </a>
 
             <a class="nav-item disabled" href="#" title="Komt later">
