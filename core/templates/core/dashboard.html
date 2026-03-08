@@ -4,7 +4,7 @@
 {% block page_subtitle %}<p class="muted">HRM Systeem Lily</p>{% endblock %}
 
 {% block page_actions %}
-<a class="btn btn-primary disabled" href="#" title="Komt later">Nieuwe task</a>
+<a class="btn btn-primary" href="{% url 'tasks:create' %}"" title="Nieuwe taak">Nieuwe taak</a>
 {% endblock %}
 
 {% block content %}
@@ -25,8 +25,8 @@
     <div class="card">
         <div class="card-head">
             <div>
-                <div class="card-kicker">Tasks</div>
-                <div class="card-title">Due soon</div>
+                <div class="card-kicker">Taken</div>
+                <div class="card-title">Binnenkort</div>
             </div>
             <div class="metric">0</div>
         </div>
@@ -101,7 +101,7 @@
             <div class="stack">
                 <a class="btn btn-soft" href="/admin/">Open Admin Portal</a>
                 <a class="btn btn-soft" href="{% url 'signals:create' %}">Maak melding</a>
-                <button class="btn btn-soft" disabled>Maak taak (soon)</button>
+                <a class="btn btn-soft" href="{% url 'tasks:create' %}" ">Maak taak</a>
 </div>
         </div>
     </div>
