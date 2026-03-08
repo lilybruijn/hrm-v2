@@ -1,15 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Task #{{ task.id }}{% endblock %}
-
+{% load helpers %}
 {% block content %}
 <div class="container py-4">
 
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
         <div>
-            <h1 class="h3 mb-1">Task #{{ task.id }}</h1>
+            <h1 class="h3 mb-1">Taak #{{ task.id }}</h1>
             <div class="text-muted small">
                 {{ task.type.name }}
-                {% if task.due_at %}<span class="mx-2">•</span>{{ task.due_at|date:"d-m-Y H:i" }}{% endif %}
+                {% if task.due_at %}<span class="mx-2">•</span>{{ task.due_at|date:"d-m-Y" }}{% endif %}
             </div>
         </div>
 
@@ -30,13 +30,53 @@
     <div class="row g-4">
         <div class="col-12 col-lg-7">
 
+            <!-- Omschrijving -->
             <div class="card shadow-sm mb-4">
                 <div class="card-body">
-                    <h5 class="card-title mb-0">Omschrijving</h5>
-                    <hr class="my-3">
-                    <div class="text-body">
-                        {{ task.body|linebreaksbr }}
+
+                    <div class="d-flex align-items-start justify-content-between gap-3">
+                        <h5 class="card-title mb-0">Omschrijving</h5>
+
+                        <div class="d-flex align-items-center gap-2">
+                            {% if task.status %}
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                {{ task.status.name }}
+                            </span>
+                            {% endif %}
+
+                            <button class="btn btn-sm btn-outline-secondary"
+                                    type="button"
+                                    onclick="toggleTaskBodyEdit()">
+                                ✏ Bewerken
+                            </button>
+                        </div>
                     </div>
+
+                    <hr class="my-3">
+
+                    <!-- View mode -->
+                    <div id="task-body-view">
+                        <div class="text-body">
+                            {{ task.body|linebreaksbr }}
+                        </div>
+                    </div>
+
+                    <!-- Edit mode -->
+                    <div id="task-body-edit" style="display:none;">
+                        <form method="post" action="{% url 'tasks:update_body' task.id %}">
+                            {% csrf_token %}
+
+                            <textarea class="form-control form-control-sm" name="body" rows="6">{{ task.body }}</textarea>
+
+                            <div class="d-flex gap-2 mt-3">
+                                <button class="btn btn-primary btn-sm" type="submit">Opslaan</button>
+                                <button class="btn btn-outline-secondary btn-sm" type="button" onclick="toggleTaskBodyEdit()">
+                                    Annuleren
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
                 </div>
             </div>
 
@@ -56,7 +96,7 @@
                         <div class="list-group-item px-0">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div class="fw-semibold">{{ n.author.username }}</div>
-                                <div class="text-muted small">{{ n.created_at|date:"d-m-Y H:i" }}</div>
+                                <div class="text-muted small">{{ n.created_at|date:"d-m-Y" }}</div>
                             </div>
                             <div class="mt-1">{{ n.body|linebreaksbr }}</div>
                         </div>
@@ -64,6 +104,84 @@
                         <div class="text-muted">Nog geen notities.</div>
                         {% endfor %}
                     </div>
+
+                </div>
+            </div>
+
+            <div class="card shadow-sm mt-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h5 class="card-title mb-0">Gekoppelde meldingen</h5>
+                    </div>
+
+                    <hr class="my-3">
+
+                    {% if task.signal %}
+                    <a class="list-group-item px-0 py-2 text-decoration-none d-block"
+                       href="{% url 'signals:detail' task.signal.id %}">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div class="fw-semibold">
+                                Melding #{{ task.signal.id }}: {{ task.signal.name }}
+                                {% if task.signal.status %}
+                                <span class="badge bg-secondary ms-2">{{ task.signal.status.name }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="text-muted small">
+                                {{ task.signal.active_from|date:"d-m-Y" }}
+                            </div>
+
+                        </div>
+
+                        <div class="text-muted small mt-1">
+                            {% with persons=task.signal.people.all %}
+                            {% if persons %}
+                            {% for p in persons %}
+                            {{ p.first_name }} {{ p.last_name }}{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                            {% else %}
+                            –
+                            {% endif %}
+                            {% endwith %}
+                        </div>
+                        <div class="text-muted small mt-2">
+                            {{ task.signal.body|truncatechars:160 }}
+                        </div>
+                    </a>
+                    {% else %}
+                    <div class="text-muted">Nog geen melding gekoppeld.</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card shadow-sm mt-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-0">Gekoppelde personen</h5>
+                    <hr class="my-3">
+
+                    {% with persons=task.people.all %}
+                    {% if persons %}
+                    <div class="list-group list-group-flush">
+                        {% for p in persons %}
+                        <a class="list-group-item px-0 py-2 text-decoration-none d-block"
+                           href="{% url 'people:detail' p.id %}">
+                            <div class="fw-semibold">{{ p.first_name }} {{ p.last_name }}</div>
+                            <div class="text-muted small">
+                                {% if p.person_type == "student" %}
+                                Student
+                                {% elif p.person_type == "employee" %}
+                                Medewerker
+                                {% else %}
+                                Persoon
+                                {% endif %}
+                                {% if p.email %} • {{ p.email }}{% endif %}
+                                {% if p.phone %} • {{ p.phone }}{% endif %}
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-muted">Nog geen personen gekoppeld.</div>
+                    {% endif %}
+                    {% endwith %}
 
                 </div>
             </div>
@@ -82,7 +200,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">Deadline</label>
-                            {{ form.due_date }}
+                            {{ form.due_at }}
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Type</label>
@@ -96,9 +214,15 @@
                             <label class="form-label">Toegewezen aan</label>
                             {{ form.assigned_to }}
                         </div>
+
                         <div class="mb-3">
-                            <label class="form-label">Omschrijving</label>
-                            {{ form.body }}
+                            <label class="form-label">Personen</label>
+                            {{ form.people }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Melding</label>
+                            {{ form.signal }}
                         </div>
 
                         <button class="btn btn-primary w-100 mt-2" type="submit">
@@ -111,6 +235,9 @@
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title mb-0">Geschiedenis</h5>
+                    <div class="text-muted small mt-2">
+                        Alleen de 25 meest recente wijzigingen worden getoond.
+                    </div>
                     <hr class="my-3">
 
                     <div class="accordion" id="historyAccordion">
@@ -118,15 +245,15 @@
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="h-{{ forloop.counter }}">
                                 <button class="accordion-button collapsed" type="button"
-                                        data-bs-toggle="collapse" data-bs-target="#hc-{{ forloop.counter }}">
+                                        data-bs-toggle="collapse" data-bs-target="#hc-{{ forloop.counter }}"
+                                        aria-expanded="false" aria-controls="hc-{{ forloop.counter }}">
                                     <div class="w-100 d-flex justify-content-between align-items-center gap-3">
                                         <span class="text-truncate">
-                                            <strong>{{ h.action_label }}</strong>
                                             <span class="text-muted small ms-2">
-                                                door <strong>{{ h.actor.username|default:"Systeem" }}</strong>
+                                                <strong>{{ h.action_label }}</strong> door <strong>{{ h.actor.username|default:"-" }}</strong>
                                             </span>
                                         </span>
-                                        <span class="text-muted small">{{ h.created_at|date:"d-m-Y H:i" }}</span>
+                                        <span class="text-muted small">{{ h.created_at|date:"d-m-Y" }}</span>
                                     </div>
                                 </button>
                             </h2>
@@ -135,7 +262,78 @@
                                  aria-labelledby="h-{{ forloop.counter }}" data-bs-parent="#historyAccordion">
                                 <div class="accordion-body">
                                     {% if h.changes %}
-                                    <pre class="bg-light border rounded p-3 mb-0 small">{{ h.changes|safe }}</pre>
+                                    <div class="list-group list-group-flush small">
+                                        {% for field, values in h.changes.items %}
+                                        {% with old=values.0 new=values.1 %}
+                                        <div class="list-group-item px-0 py-2">
+                                            <div class="fw-semibold mb-1">
+                                                {% if field == "status_id" %}Status
+                                                {% elif field == "type_id" %}Type
+                                                {% elif field == "assigned_to_id" %}Toegewezen aan
+                                                {% elif field == "signal_id" %}Melding
+                                                {% elif field == "due_at" %}Deadline
+                                                {% elif field == "body" %}Omschrijving
+                                                {% elif field == "is_archived" %}Archiefstatus
+                                                {% elif field == "people" %}Personen
+                                                {% else %}{{ field }}
+                                                {% endif %}
+                                            </div>
+
+                                            <div>
+                                                <span class="text-muted">
+                                                    {% if field == "status_id" %}
+                                                    {{ status_map|get_item:old|default:"–" }}
+                                                    {% elif field == "type_id" %}
+                                                    {{ type_map|get_item:old|default:"–" }}
+                                                    {% elif field == "assigned_to_id" %}
+                                                    {{ user_map|get_item:old|default:"–" }}
+                                                    {% elif field == "signal_id" %}
+                                                    {{ signal_map|get_item:old|default:"–" }}
+                                                    {% elif field == "is_archived" %}
+                                                    {% if old %}Gearchiveerd{% else %}Niet gearchiveerd{% endif %}
+                                                    {% elif field == "people" %}
+                                                    {% if old %}
+                                                    {% for person_id in old %}
+                                                    {{ person_map|get_item:person_id|default:"–" }}{% if not forloop.last %}, {% endif %}
+                                                    {% endfor %}
+                                                    {% else %}
+                                                    –
+                                                    {% endif %}
+                                                    {% else %}
+                                                    {{ old|default:"–" }}
+                                                    {% endif %}
+                                                </span>
+
+                                                <span class="mx-2">→</span>
+
+                                                <span class="text-success fw-semibold">
+                                                    {% if field == "status_id" %}
+                                                    {{ status_map|get_item:new|default:"–" }}
+                                                    {% elif field == "type_id" %}
+                                                    {{ type_map|get_item:new|default:"–" }}
+                                                    {% elif field == "assigned_to_id" %}
+                                                    {{ user_map|get_item:new|default:"–" }}
+                                                    {% elif field == "signal_id" %}
+                                                    {{ signal_map|get_item:new|default:"–" }}
+                                                    {% elif field == "is_archived" %}
+                                                    {% if new %}Gearchiveerd{% else %}Niet gearchiveerd{% endif %}
+                                                    {% elif field == "people" %}
+                                                    {% if new %}
+                                                    {% for person_id in new %}
+                                                    {{ person_map|get_item:person_id|default:"–" }}{% if not forloop.last %}, {% endif %}
+                                                    {% endfor %}
+                                                    {% else %}
+                                                    –
+                                                    {% endif %}
+                                                    {% else %}
+                                                    {{ new|default:"–" }}
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {% endwith %}
+                                        {% endfor %}
+                                    </div>
                                     {% else %}
                                     <div class="text-muted">Geen details.</div>
                                     {% endif %}
@@ -146,11 +344,28 @@
                         <div class="text-muted">Geen history.</div>
                         {% endfor %}
                     </div>
-
                 </div>
             </div>
 
         </div>
     </div>
 </div>
+
+<script>
+    function toggleTaskBodyEdit() {
+        const view = document.getElementById("task-body-view");
+        const edit = document.getElementById("task-body-edit");
+
+        if (edit.style.display === "none") {
+            edit.style.display = "block";
+            view.style.display = "none";
+
+            const textarea = edit.querySelector("textarea");
+            if (textarea) textarea.focus();
+        } else {
+            edit.style.display = "none";
+            view.style.display = "block";
+        }
+    }
+</script>
 {% endblock %}

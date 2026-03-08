@@ -10,4 +10,5 @@ urlpatterns = [
     path("<int:pk>/update/", views.task_update, name="update"),
     path("<int:pk>/note/", views.task_add_note, name="add_note"),
     path("<int:pk>/archive/", views.task_toggle_archive, name="toggle_archive"),
+    path("<int:pk>/body/", views.task_update_body, name="update_body"),
 ]

@@ -1,5 +1,3 @@
-from datetime import timedelta
-
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
@@ -11,25 +9,30 @@ from django.views.decorators.http import require_POST
 from django.utils.dateparse import parse_date
 
 from core.auth import staff_required
+from core.models.people import Person
 from core.models.notes import Note
 from core.models.status import Status
 from core.models.types import SignalType
-from core.models.core import Signal
+from core.models.core import Signal, Task
 from .forms import SignalForm, NoteForm
 from .services import log_history, create_signal_notifications
 
 User = get_user_model()
 
+
 @staff_required
 def signal_list(request):
-    qs = Signal.objects.select_related("type", "status", "assigned_to")
+    qs = Signal.objects.select_related("type", "status", "assigned_to").prefetch_related("people")
 
-    # filters
     q = (request.GET.get("q") or "").strip()
     status_id = (request.GET.get("status") or "").strip()
     type_id = (request.GET.get("type") or "").strip()
     assignee_id = (request.GET.get("assignee") or "").strip()
     show_archived = request.GET.get("archived") == "1"
+    person_id = (request.GET.get("person") or "").strip()
+
+    if person_id.isdigit():
+        qs = qs.filter(people__id=int(person_id)).distinct()
 
     if not show_archived:
         qs = qs.filter(is_archived=False)
@@ -41,6 +44,7 @@ def signal_list(request):
 
     if status_id.isdigit():
         qs = qs.filter(status_id=int(status_id))
+
     if type_id.isdigit():
         qs = qs.filter(type_id=int(type_id))
 
@@ -51,6 +55,7 @@ def signal_list(request):
         )
 
     SORT_MAP = {
+        "id": "id",
         "active_from": "active_from",
         "type": "type__name",
         "status": "status__name",
@@ -66,16 +71,21 @@ def signal_list(request):
     sort_field = SORT_MAP.get(sort, "active_from")
     prefix = "-" if dir_ == "desc" else ""
 
-    qs = qs.order_by(f"{prefix}{sort_field}", "-active_from", "-created_at")
+    qs = qs.order_by(f"{prefix}{sort_field}", "-active_from", "-created_at").distinct()
 
     paginator = Paginator(qs, 25)
     page_obj = paginator.get_page(request.GET.get("page"))
 
-    statuses = Status.objects.filter(is_active=True).order_by("sort_order", "name")
+    statuses = Status.objects.filter(scope="signal", is_active=True).order_by("sort_order", "name")
     types = SignalType.objects.filter(is_active=True).order_by("sort_order", "name")
+    people = Person.objects.order_by("last_name", "first_name")
 
-    assignees = User.objects.filter(is_staff=True, is_active=True).order_by("username")
-
+    assignees = (
+        User.objects
+        .filter(assigned_signals__isnull=False, is_staff=True, is_active=True)
+        .distinct()
+        .order_by("username")
+    )
 
     return render(request, "core/signals/list.html", {
         "page_obj": page_obj,
@@ -83,13 +93,15 @@ def signal_list(request):
         "q": q,
         "status_id": status_id,
         "type_id": type_id,
+        "person_id": person_id,
         "assignee_id": assignee_id,
         "assignees": assignees,
         "show_archived": show_archived,
         "statuses": statuses,
         "types": types,
-        "sort": sort,  
-        "dir": dir_,   
+        "people": people,
+        "sort": sort,
+        "dir": dir_,
         "active_nav": "signals",
     })
 
@@ -97,6 +109,8 @@ def signal_list(request):
 @staff_required
 @transaction.atomic
 def signal_create(request):
+    people_param = (request.GET.get("people") or "").strip()
+
     if request.method == "POST":
         form = SignalForm(request.POST)
         if form.is_valid():
@@ -106,7 +120,12 @@ def signal_create(request):
             messages.success(request, "Melding aangemaakt.")
             return redirect("signals:detail", pk=signal.id)
     else:
-        initial = { "active_from": timezone.now() }
+        initial = {"active_from": timezone.localdate()}
+
+        if people_param:
+            ids = [int(x) for x in people_param.split(",") if x.strip().isdigit()]
+            initial["people"] = ids
+
         form = SignalForm(initial=initial)
 
     return render(request, "core/signals/form.html", {
@@ -119,25 +138,23 @@ def signal_create(request):
 @staff_required
 def signal_detail(request, pk: int):
     signal = get_object_or_404(
-        Signal.objects.select_related("type", "status", "assigned_to"),
+        Signal.objects.select_related("type", "status", "assigned_to").prefetch_related("people"),
         pk=pk
     )
 
     form = SignalForm(instance=signal)
     note_form = NoteForm()
 
-    statuses = Status.objects.filter(is_active=True).order_by("sort_order", "name")
-    types = SignalType.objects.filter(is_active=True).order_by("sort_order", "name")
-    assignees = User.objects.filter(is_staff=True, is_active=True).order_by("username")
+    notes = signal.notes.select_related("author").all()[:25]
+    history = signal.history.select_related("actor").all()[:25]
 
-    notes = signal.notes.select_related("author").all()
-    history = signal.history.select_related("actor").all()
-
-    status_map = {s.id: s.name for s in Status.objects.all()}
+    status_map = {s.id: s.name for s in Status.objects.filter(scope="signal")}
     type_map = {t.id: t.name for t in SignalType.objects.all()}
     user_map = {u.id: u.username for u in User.objects.all()}
+    person_map = {p.id: f"{p.first_name} {p.last_name}" for p in Person.objects.all()}
 
     ACTION_LABELS = {
+        "name": "Naam gewijzigd",
         "created": "Melding aangemaakt",
         "updated": "Melding bijgewerkt",
         "status_changed": "Status gewijzigd",
@@ -151,31 +168,42 @@ def signal_detail(request, pk: int):
     for h in history:
         h.action_label = ACTION_LABELS.get(h.action, h.action.replace("_", " ").capitalize())
 
+    tasks = (
+        Task.objects
+        .select_related("type", "status", "assigned_to", "signal")
+        .prefetch_related("people")
+        .filter(signal=signal, is_archived=False)
+        .order_by("due_at", "-created_at")
+    )
+
     return render(request, "core/signals/detail.html", {
         "signal": signal,
         "form": form,
         "note_form": note_form,
-        "statuses": statuses,
-        "types": types,
-        "assignees": assignees,
+        "tasks": tasks,
         "notes": notes,
         "history": history,
         "active_nav": "signals",
         "status_map": status_map,
         "type_map": type_map,
         "user_map": user_map,
+        "person_map": person_map,
     })
 
 
 @staff_required
 @transaction.atomic
 def signal_update(request, pk: int):
-    signal = get_object_or_404(Signal.objects.select_related("type", "status", "assigned_to"), pk=pk)
+    signal = get_object_or_404(
+        Signal.objects.select_related("type", "status", "assigned_to").prefetch_related("people"),
+        pk=pk
+    )
 
     if request.method != "POST":
         return redirect("signals:detail", pk=signal.pk)
 
     before = {
+        "name": signal.name,
         "type_id": signal.type_id,
         "assigned_to_id": signal.assigned_to_id,
         "status_id": signal.status_id,
@@ -183,48 +211,64 @@ def signal_update(request, pk: int):
         "body": signal.body,
         "is_archived": signal.is_archived,
     }
+    before_people = list(signal.people.values_list("id", flat=True))
 
     data = request.POST.copy()
 
-    # velden die je form verwacht
-    expected_fields = ["type", "active_from", "status", "assigned_to", "body"]
+    expected_fields = ["name", "type", "active_from", "status", "assigned_to", "body"]
 
     for f in expected_fields:
-        if f not in data or data.get(f) in (None, ""):
+        if f not in data:
             if f in ("type", "status", "assigned_to"):
                 data[f] = str(getattr(signal, f"{f}_id") or "")
             elif f == "active_from":
                 data[f] = signal.active_from.isoformat() if signal.active_from else ""
-            else:  # body
+            else:
                 data[f] = getattr(signal, f) or ""
 
     form = SignalForm(data, instance=signal)
+
     if not form.is_valid():
         messages.error(request, "Formulier is niet geldig.")
 
-        # opnieuw alles laden wat je detail template verwacht
         note_form = NoteForm()
-        statuses = Status.objects.filter(is_active=True).order_by("sort_order", "name")
-        types = SignalType.objects.filter(is_active=True).order_by("sort_order", "name")
-        assignees = User.objects.filter(is_staff=True, is_active=True).order_by("username")
         notes = signal.notes.select_related("author").all()
-        history = signal.history.select_related("actor").all()
+        history = signal.history.select_related("actor").all()[:25]
+        tasks = (
+            Task.objects
+            .select_related("type", "status", "assigned_to", "signal")
+            .prefetch_related("people")
+            .filter(signal=signal, is_archived=False)
+            .order_by("due_at", "-created_at")
+        )
+
+        status_map = {s.id: s.name for s in Status.objects.filter(scope="signal")}
+        type_map = {t.id: t.name for t in SignalType.objects.all()}
+        user_map = {u.id: u.username for u in User.objects.all()}
+        person_map = {p.id: f"{p.first_name} {p.last_name}" for p in Person.objects.all()}
+
+        for h in history:
+            h.action_label = ACTION_LABELS.get(h.action, h.action.replace("_", " ").capitalize())
 
         return render(request, "core/signals/detail.html", {
             "signal": signal,
-            "form": form,  # ✅ met errors
+            "form": form,
             "note_form": note_form,
-            "statuses": statuses,
-            "types": types,
-            "assignees": assignees,
+            "tasks": tasks,
             "notes": notes,
             "history": history,
             "active_nav": "signals",
+            "status_map": status_map,
+            "type_map": type_map,
+            "user_map": user_map,
+            "person_map": person_map,
         })
 
     signal = form.save()
+    after_people = list(signal.people.values_list("id", flat=True))
 
     after = {
+        "name": signal.name,
         "type_id": signal.type_id,
         "assigned_to_id": signal.assigned_to_id,
         "status_id": signal.status_id,
@@ -234,12 +278,36 @@ def signal_update(request, pk: int):
     }
 
     changes = {k: [before[k], after[k]] for k in before if before[k] != after[k]}
+    if before_people != after_people:
+        changes["people"] = [before_people, after_people]
 
     if changes:
         log_history(signal, request.user, "updated", changes)
         messages.success(request, "Melding bijgewerkt.")
 
     return redirect("signals:detail", pk=signal.pk)
+
+
+@staff_required
+@require_POST
+@transaction.atomic
+def signal_update_body(request, pk: int):
+    signal = get_object_or_404(Signal, pk=pk)
+
+    new_body = (request.POST.get("body") or "").strip()
+    if not new_body:
+        messages.error(request, "Omschrijving mag niet leeg zijn.")
+        return redirect("signals:detail", pk=signal.pk)
+
+    old_body = signal.body
+    if old_body != new_body:
+        signal.body = new_body
+        signal.save(update_fields=["body"])
+        log_history(signal, request.user, "updated", {"body": [old_body, new_body]})
+        messages.success(request, "Omschrijving bijgewerkt.")
+
+    return redirect("signals:detail", pk=signal.pk)
+
 
 @staff_required
 @require_POST
@@ -283,6 +351,7 @@ def signal_set_status(request, pk: int):
 
     return redirect("signals:detail", pk=signal.pk)
 
+
 @staff_required
 @require_POST
 @transaction.atomic
@@ -305,6 +374,7 @@ def signal_set_type(request, pk: int):
 
     return redirect("signals:detail", pk=signal.pk)
 
+
 @staff_required
 @require_POST
 @transaction.atomic
@@ -312,7 +382,7 @@ def signal_set_active_from(request, pk: int):
     signal = get_object_or_404(Signal, pk=pk)
     active_from_raw = (request.POST.get("active_from") or "").strip()
 
-    new_date = parse_date(active_from_raw)  # verwacht YYYY-MM-DD
+    new_date = parse_date(active_from_raw)
     if not new_date:
         messages.error(request, "Ongeldige datum.")
         return redirect("signals:detail", pk=signal.pk)
@@ -325,6 +395,7 @@ def signal_set_active_from(request, pk: int):
         messages.success(request, "Actief vanaf bijgewerkt.")
 
     return redirect("signals:detail", pk=signal.pk)
+
 
 @staff_required
 @require_POST

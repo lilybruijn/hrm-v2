@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Nieuwe task{% endblock %}
+{% block title %}Nieuwe taak{% endblock %}
 
 {% block content %}
 <div class="page">
     <div class="page-header row">
         <div class="col-md-8 mb-3">
-            <h1>Nieuwe task</h1>
+            <h1>Nieuwe taak</h1>
             <p class="muted mb-0">Maak een nieuwe taak aan</p>
         </div>
         <div class="col-md-4 mb-3" style="display:flex; align-items:flex-end; justify-content:flex-end;">
@@ -16,8 +16,20 @@
     <div class="card p-3">
         <form method="post" autocomplete="off">
             {% csrf_token %}
-
+            {{ form.non_field_errors }}
             <div class="row g-3">
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Melding</label>
+                    {{ form.signal }}
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Persoon</label>
+                    {{ form.people }}
+                    <div class="small text-muted mt-1">
+                        Opties: {{ form.people.field.queryset.count }}
+                    </div>
+                </div>
                 <div class="col-12 col-md-4">
                     <label class="form-label">Type</label>
                     {{ form.type }}
@@ -33,7 +45,7 @@
 
                 <div class="col-12 col-md-4">
                     <label class="form-label">Deadline</label>
-                    {{ form.due_date }}
+                    {{ form.due_at }}
                 </div>
 
                 <div class="col-12">

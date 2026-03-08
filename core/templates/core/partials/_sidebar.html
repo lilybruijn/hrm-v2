@@ -20,6 +20,17 @@
                 <span>Dashboard</span>
             </a>
 
+            <a class="nav-item disabled" href="#" title="Komt later">
+                <span class="nav-ico">⚙</span>
+                <span>Instellingen</span>
+                <span class="pill">binnenkort</span>
+            </a>
+
+            <a class="nav-item {% if active_nav == 'people' %}active{% endif %}" href="{% url 'people:list' %}">
+                <span class="nav-ico">👤</span>
+                <span>Personen</span>
+            </a>
+
             <a class="nav-item {% if active_nav == 'activities' %}active{% endif %}"
                href="{% url 'activities:list' %}">
                 <span class="nav-ico">🕘</span>
@@ -29,11 +40,6 @@
             <a class="nav-item {% if active_nav == 'signals' %}active{% endif %}" href="{% url 'signals:list' %}">
                 <span class="nav-ico">📌</span>
                 <span>Meldingen</span>
-            </a>
-
-            <a class="nav-item {% if active_nav == 'people' %}active{% endif %}" href="{% url 'people:list' %}">
-                <span class="nav-ico">👤</span>
-                <span>Personen</span>
             </a>
 
             <a class="nav-item {% if active_nav == 'tasks' %}active{% endif %}" href="{% url 'tasks:list' %}">

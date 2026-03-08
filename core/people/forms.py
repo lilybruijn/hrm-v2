@@ -4,7 +4,7 @@ from core.models.people import Person
 class PersonForm(forms.ModelForm):
     class Meta:
         model = Person
-        fields = ["person_type", "first_name", "last_name", "email", "phone", "notes"]
+        fields = ["person_type", "first_name", "last_name", "email", "phone"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
