@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}People{% endblock %}
+{% block title %}Personen{% endblock %}
 
 {% block content %}
 <div class="page">
     <div class="page-header row">
         <div class="col-md-8 mb-3">
-            <h1>People</h1>
+            <h1>Personen</h1>
             <p class="muted mb-0">Overzicht van studenten en medewerkers</p>
         </div>
         <div class="col-md-4 mb-3" style="display:flex; align-items:flex-end; justify-content:flex-end;">
@@ -56,6 +56,12 @@
                     <tr>
                         {# sort toggles #}
                         {% with next_dir="asc" %}
+                        <th>
+                            <a href="?q={{ q }}&type={{ person_type }}&sort=id&dir={% if sort == 'id' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                                # {% if sort == "id" %}{% if dir == "asc" %}▲{% else %}▼{% endif %}{% endif %}
+                            </a>
+                        </th>
+                        
                         {% if sort == "name" and dir == "asc" %}{% with next_dir="desc" %}{% endwith %}{% endif %}
                         <th>
                             <a href="?q={{ q }}&type={{ person_type }}&sort=name&dir={% if sort == 'name' and dir == 'asc' %}desc{% else %}asc{% endif %}">
@@ -95,6 +101,7 @@
                 <tbody>
                     {% for p in people %}
                     <tr>
+                        <td class="text-muted">{{ p.id }}</td>
                         <td class="fw-semibold">{{ p.first_name }} {{ p.last_name }}</td>
                         <td>
                             {% if p.person_type == "student" %}

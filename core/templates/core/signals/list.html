@@ -14,18 +14,30 @@
         </div>
     </div>
 
-    <form method="get" action="{% url 'signals:list' %}" class="card mb-3"  autocomplete="off">
+    <form method="get" action="{% url 'signals:list' %}" class="card mb-3" autocomplete="off">
         <div class="card-body">
             <div class="row g-2 align-items-end">
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-md-3">
                     <label class="form-label mb-1">Zoeken</label>
-                    <input class="form-control" type="text" name="q" placeholder="Zoeken..." value="{{ q }}"  autocomplete="off">
+                    <input class="form-control" type="text" name="q" placeholder="Zoeken..." value="{{ q }}" autocomplete="off">
+                </div>
+
+                <div class="col-12 col-md-2">
+                    <label class="form-label mb-1">Persoon</label>
+                    <select class="form-select" name="person" autocomplete="off">
+                        <option value="" {% if not person_id %}selected{% endif %}>Alles</option>
+                        {% for p in people %}
+                        <option value="{{ p.id }}" {% if person_id == p.id|stringformat:"s" %}selected{% endif %}>
+                            {{ p.first_name }} {{ p.last_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
                 </div>
 
                 <div class="col-12 col-md-2">
                     <label class="form-label mb-1">Type</label>
                     <select class="form-select" name="type" autocomplete="off">
-                        <option value="">Alle</option>
+                        <option value="" {% if not type_id %}selected{% endif %}>Alle</option>
                         {% for t in types %}
                         <option value="{{ t.id }}" {% if type_id|add:"" == t.id|add:"" %}selected{% endif %}>{{ t.name }}</option>
                         {% endfor %}
@@ -34,25 +46,24 @@
 
                 <div class="col-12 col-md-2">
                     <label class="form-label mb-1">Status</label>
-                    <select class="form-select" name="status"  autocomplete="off">
-                        <option value="">Alle</option>
+                    <select class="form-select" name="status" autocomplete="off">
+                        <option value="" {% if not status_id %}selected{% endif %}>Alle</option>
                         {% for s in statuses %}
                         <option value="{{ s.id }}" {% if status_id|add:"" == s.id|add:"" %}selected{% endif %}>{{ s.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
 
-                <div class="col-12 col-md-3">
+                <div class="col-12 col-md-2">
                     <label class="form-label mb-1">Toewijzing</label>
                     <select class="form-select" name="assignee" autocomplete="off">
-                        <option value="">Alles</option>
+                        <option value="" {% if not assignee_id %}selected{% endif %}>Alle</option>
                         <option value="unassigned" {% if assignee_id == "unassigned" %}selected{% endif %}>
                             Niet toegewezen
                         </option>
 
                         {% for user in assignees %}
-                        <option value="{{ user.id }}"
-                                {% if assignee_id|add:"" == user.id|add:"" %}selected{% endif %}>
+                        <option value="{{ user.id }}" {% if assignee_id|add:"" == user.id|add:"" %}selected{% endif %}>
                             {{ user.username }}
                         </option>
                         {% endfor %}
@@ -70,7 +81,7 @@
                             <label class="form-check-label" for="archived">Toon archief</label>
                         </div>
 
-                        {% if q or type_id or status_id or assignee_id or show_archived %}
+                        {% if q or type_id or person_id or status_id or assignee_id or show_archived %}
                         <a class="btn btn-sm btn-outline-secondary" href="{% url 'signals:list' %}">Reset</a>
                         {% endif %}
                     </div>
@@ -79,91 +90,104 @@
         </div>
     </form>
 
-
     <div class="card p-3">
         <div class="table-responsive">
             <table class="table table-sm align-middle">
                 <thead class="table-light">
                     <tr>
                         <th>
-                            {% if sort == 'active_from' %}
+                            {% if sort == 'id' %}
                             {% if dir == 'asc' %}
-                            <a href="?{% qs_set sort='active_from' dir='desc' page='' %}">
-                                Actief vanaf ▲
-                            </a>
+                            <a href="?{% qs_set sort='id' dir='desc' page='' %}"># ▲</a>
                             {% else %}
-                            <a href="?{% qs_set sort='active_from' dir='asc' page='' %}">
-                                Actief vanaf ▼
-                            </a>
+                            <a href="?{% qs_set sort='id' dir='asc' page='' %}"># ▼</a>
                             {% endif %}
                             {% else %}
-                            <a href="?{% qs_set sort='active_from' dir='asc' page='' %}">
-                                Actief vanaf
-                            </a>
+                            <a href="?{% qs_set sort='id' dir='asc' page='' %}">#</a>
+                            {% endif %}
+                        </th>
+                        <th>
+                            {% if sort == 'name' %}
+                            {% if dir == 'asc' %}
+                            <a href="?{% qs_set sort='name' dir='desc' page='' %}">Titel ▲</a>
+                            {% else %}
+                            <a href="?{% qs_set sort='name' dir='asc' page='' %}">Titel  ▼</a>
+                            {% endif %}
+                            {% else %}
+                            <a href="?{% qs_set sort='name' dir='asc' page='' %}">Titel </a>
+                            {% endif %}
+                        </th>
+                        <th>
+                            {% if sort == 'active_from' %}
+                            {% if dir == 'asc' %}
+                            <a href="?{% qs_set sort='active_from' dir='desc' page='' %}">Actief vanaf ▲</a>
+                            {% else %}
+                            <a href="?{% qs_set sort='active_from' dir='asc' page='' %}">Actief vanaf ▼</a>
+                            {% endif %}
+                            {% else %}
+                            <a href="?{% qs_set sort='active_from' dir='asc' page='' %}">Actief vanaf</a>
                             {% endif %}
                         </th>
 
                         <th>
                             {% if sort == 'type' %}
                             {% if dir == 'asc' %}
-                            <a href="?{% qs_set sort='type' dir='desc' page='' %}">
-                                Type ▲
-                            </a>
+                            <a href="?{% qs_set sort='type' dir='desc' page='' %}">Type ▲</a>
                             {% else %}
-                            <a href="?{% qs_set sort='type' dir='asc' page='' %}">
-                                Type ▼
-                            </a>
+                            <a href="?{% qs_set sort='type' dir='asc' page='' %}">Type ▼</a>
                             {% endif %}
                             {% else %}
-                            <a href="?{% qs_set sort='type' dir='asc' page='' %}">
-                                Type
-                            </a>
+                            <a href="?{% qs_set sort='type' dir='asc' page='' %}">Type</a>
                             {% endif %}
                         </th>
 
                         <th>
                             {% if sort == 'status' %}
                             {% if dir == 'asc' %}
-                            <a href="?{% qs_set sort='status' dir='desc' page='' %}">
-                                Status ▲
-                            </a>
+                            <a href="?{% qs_set sort='status' dir='desc' page='' %}">Status ▲</a>
                             {% else %}
-                            <a href="?{% qs_set sort='status' dir='asc' page='' %}">
-                                Status ▼
-                            </a>
+                            <a href="?{% qs_set sort='status' dir='asc' page='' %}">Status ▼</a>
                             {% endif %}
                             {% else %}
-                            <a href="?{% qs_set sort='status' dir='asc' page='' %}">
-                                Status
-                            </a>
+                            <a href="?{% qs_set sort='status' dir='asc' page='' %}">Status</a>
                             {% endif %}
                         </th>
+
+                        <th>Personen</th>
+
+                        <th>Omschrijving</th>
 
                         <th>
                             {% if sort == 'assigned_to' %}
                             {% if dir == 'asc' %}
-                            <a href="?{% qs_set sort='assigned_to' dir='desc' page='' %}">
-                                Toegewezen ▲
-                            </a>
+                            <a href="?{% qs_set sort='assigned_to' dir='desc' page='' %}">Toegewezen ▲</a>
                             {% else %}
-                            <a href="?{% qs_set sort='assigned_to' dir='asc' page='' %}">
-                                Toegewezen ▼
-                            </a>
+                            <a href="?{% qs_set sort='assigned_to' dir='asc' page='' %}">Toegewezen ▼</a>
                             {% endif %}
                             {% else %}
-                            <a href="?{% qs_set sort='assigned_to' dir='asc' page='' %}">
-                                Toegewezen
-                            </a>
+                            <a href="?{% qs_set sort='assigned_to' dir='asc' page='' %}">Toegewezen</a>
                             {% endif %}
                         </th>
+
                         <th class="text-end"></th>
                     </tr>
                 </thead>
+
                 <tbody>
                     {% for s in signals %}
                     <tr>
+                        <td class="text-muted">{{ s.id }}</td>
+                        <td>
+                            {% if s.name %}
+                            <span class="fw-semibold">{{ s.name }}</span>
+                            {% else %}
+                            <span class="text-muted">–</span>
+                            {% endif %}
+                        </td>
                         <td>{{ s.active_from|date:"d-m-Y" }}</td>
+
                         <td>{{ s.type.name }}</td>
+
                         <td>
                             {% if s.status %}
                             <span class="badge bg-secondary">
@@ -173,6 +197,25 @@
                             <span class="text-muted">–</span>
                             {% endif %}
                         </td>
+
+                        <td>
+                            {% with persons=s.people.all %}
+                            {% if persons %}
+                            {% for p in persons %}
+                            <a class="text-decoration-none" href="{% url 'people:detail' p.id %}">
+                                {{ p.first_name }} {{ p.last_name }}
+                            </a>{% if not forloop.last %}, {% endif %}
+                            {% endfor %}
+                            {% else %}
+                            <span class="text-muted">–</span>
+                            {% endif %}
+                            {% endwith %}
+                        </td>
+
+                        <td class="text-muted">
+                            {{ s.body|truncatechars:80 }}
+                        </td>
+
                         <td>
                             {% if s.assigned_to %}
                             {{ s.assigned_to.username }}
@@ -180,16 +223,16 @@
                             <span class="text-muted">Iedereen</span>
                             {% endif %}
                         </td>
+
                         <td class="text-end">
-                            <a class="btn btn-sm btn-outline-primary"
-                               href="{% url 'signals:detail' s.id %}">
+                            <a class="btn btn-sm btn-outline-primary" href="{% url 'signals:detail' s.id %}">
                                 Open
                             </a>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center text-muted py-4">
+                        <td colspan="8" class="text-center text-muted py-4">
                             Geen meldingen gevonden.
                         </td>
                     </tr>

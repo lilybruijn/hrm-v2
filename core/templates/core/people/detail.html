@@ -26,6 +26,48 @@
         <!-- Left column -->
         <div class="col-12 col-lg-7">
 
+            <!-- Omschrijving -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+
+                    <div class="d-flex align-items-start justify-content-between gap-3">
+                        <h5 class="card-title mb-0">Omschrijving</h5>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn btn-sm btn-outline-secondary"
+                                    type="button"
+                                    onclick="toggleDescriptionEdit()">
+                                ✏ Bewerken
+                            </button>
+                        </div>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <!-- View mode -->
+                    <div id="description-view">
+                        <div class="text-body">
+                            {{ person.description|linebreaksbr }}
+                        </div>
+                    </div>
+
+                    <!-- Edit mode -->
+                    <div id="description-edit" style="display:none;">
+                        <form method="post" action="{% url 'people:person_update_description' person.id %}" autocomplete="off">
+                            {% csrf_token %}
+
+                            <textarea class="form-control form-control-sm" name="description" rows="6">{{ person.description }}</textarea>
+
+                            <div class="d-flex gap-2 mt-3">
+                                <button class="btn btn-primary btn-sm" type="submit">Opslaan</button>
+                                <button class="btn btn-outline-secondary btn-sm" type="button" onclick="toggleDescriptionEdit()">Annuleren</button>
+                            </div>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+
             <!-- Gegevens -->
             <div class="card shadow-sm mb-4">
                 <div class="card-body">
@@ -46,17 +88,6 @@
                         <div class="col-12 col-md-6">
                             <div class="text-muted small">Telefoon</div>
                             <div>{% if person.phone %}{{ person.phone }}{% else %}<span class="text-muted">–</span>{% endif %}</div>
-                        </div>
-
-                        <div class="col-12">
-                            <div class="text-muted small">Opmerkingen</div>
-                            <div>
-                                {% if person.notes %}
-                                {{ person.notes|linebreaksbr }}
-                                {% else %}
-                                <span class="text-muted">–</span>
-                                {% endif %}
-                            </div>
                         </div>
                     </div>
 
@@ -83,7 +114,7 @@
                         <div class="list-group-item px-0">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div class="fw-semibold">{{ n.author.username }}</div>
-                                <div class="text-muted small">{{ n.created_at|date:"d-m-Y H:i" }}</div>
+                                <div class="text-muted small">{{ n.created_at|date:"d-m-Y" }}</div>
                             </div>
                             <div class="mt-1">
                                 {{ n.body|linebreaksbr }}
@@ -94,6 +125,94 @@
                         {% endfor %}
                     </div>
 
+                </div>
+            </div>
+
+            <!-- Meldingen -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h5 class="card-title mb-0">Meldingen</h5>
+                        <div>
+                            <a class="btn btn-sm btn-soft" href="{% url 'signals:list' %}?person={{ person.id }}">Bekijk alles</a>
+                            <a class="btn btn-sm btn-primary" href="{% url 'signals:create' %}?people={{ person.id }}">
+                                + Melding aanmaken
+                            </a>
+                        </div>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <div class="list-group list-group-flush">
+                        {% for s in signals %}
+                        <a class="list-group-item px-0 py-2 text-decoration-none" href="{% url 'signals:detail' s.id %}">
+                            <div class="d-flex justify-content-between align-items-start gap-3">
+                                <div class="fw-semibold">
+                                    #{{s.id}} {{ s.name }}
+                                    {% if s.status %}
+                                    <span class="badge bg-secondary ms-2">{{ s.status.name }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-muted small">
+                                    {{ s.active_from|date:"d-m-Y" }}
+                                </div>
+                            </div>
+                            <div class="text-muted small mt-1">
+                                {{ s.body|truncatechars:120 }}
+                            </div>
+                        </a>
+                        {% empty %}
+                        <div class="text-muted">Nog geen meldingen.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tasks -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h5 class="card-title mb-0">Taken</h5>
+                        <div>
+                            <a class="btn btn-sm btn-soft" href="{% url 'tasks:list' %}?person={{ person.id }}">Bekijk alles</a>
+                            <a class="btn btn-sm btn-primary" href="{% url 'tasks:create' %}?people={{ person.id }}">
+                                + Taak aanmaken
+                            </a>
+                        </div>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <div class="list-group list-group-flush">
+                        {% for t in tasks %}
+                        <a class="list-group-item px-0 py-2 text-decoration-none" href="{% url 'tasks:detail' t.id %}">
+                            <div class="d-flex justify-content-between align-items-start gap-3">
+                                <div class="fw-semibold">
+                                    {{ t.type.name }}
+                                    {% if t.status %}
+                                    <span class="badge bg-secondary ms-2">{{ t.status.name }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-muted small">
+                                    {% if t.due_at %}{{ t.due_at|date:"d-m-Y" }}{% else %}–{% endif %}
+                                </div>
+                            </div>
+
+                            <div class="text-muted small mt-1">
+                                {% if t.assigned_to %}{{ t.assigned_to.username }}{% else %}–{% endif %}
+                                {% if t.signal_id %} • gekoppeld aan signal #{{ t.signal_id }}{% endif %}
+                            </div>
+
+                            {% if t.body %}
+                            <div class="text-muted small mt-1">
+                                {{ t.body|truncatechars:120 }}
+                            </div>
+                            {% endif %}
+                        </a>
+                        {% empty %}
+                        <div class="text-muted">Nog geen taken.</div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
 
@@ -136,11 +255,6 @@
                                 <label class="form-label">Telefoon</label>
                                 {{ form.phone }}
                             </div>
-
-                            <div class="col-12">
-                                <label class="form-label">Opmerkingen</label>
-                                {{ form.notes }}
-                            </div>
                         </div>
 
                         <button class="btn btn-primary w-100 mt-3" type="submit">
@@ -154,6 +268,9 @@
             <div class="card shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title mb-0">Geschiedenis</h5>
+                    <div class="text-muted small mt-2">
+                        Alleen de 25 meest recente wijzigingen worden getoond.
+                    </div>
                     <hr class="my-3">
 
                     <div class="accordion" id="historyAccordion">
@@ -170,7 +287,7 @@
                                                 door <strong>{{ h.actor.username|default:"Systeem" }}</strong>
                                             </span>
                                         </span>
-                                        <span class="text-muted small">{{ h.created_at|date:"d-m-Y H:i" }}</span>
+                                        <span class="text-muted small">{{ h.created_at|date:"d-m-Y" }}</span>
                                     </div>
                                 </button>
                             </h2>
@@ -189,7 +306,7 @@
                                                 {% elif field == "last_name" %}Achternaam
                                                 {% elif field == "email" %}Email
                                                 {% elif field == "phone" %}Telefoon
-                                                {% elif field == "notes" %}Interne notitie
+                                                {% elif field == "description" %}Omschrijving
                                                 {% else %}{{ field }}
                                                 {% endif %}
                                             </div>
@@ -235,4 +352,21 @@
 
     </div>
 </div>
+<script>
+    function toggleDescriptionEdit() {
+        const view = document.getElementById("description-view");
+        const edit = document.getElementById("description-edit");
+
+        if (edit.style.display === "none") {
+            edit.style.display = "block";
+            view.style.display = "none";
+
+            const textarea = edit.querySelector("textarea");
+            if (textarea) textarea.focus();
+        } else {
+            edit.style.display = "none";
+            view.style.display = "block";
+        }
+    }
+</script>
 {% endblock %}

@@ -10,6 +10,7 @@ from core.auth import staff_required
 from core.models.history import HistoryEvent
 from core.models.notes import Note
 from core.models.people import Person
+from core.models.core import Signal, Task
 from .forms import PersonForm
 
 from core.signals.services import log_history  # hergebruik jouw logger
@@ -24,6 +25,7 @@ def person_list(request):
 
     # sorting
     SORT_MAP = {
+        "id": "id",
         "name": "last_name",
         "type": "person_type",
         "email": "email",
@@ -102,7 +104,7 @@ def person_detail(request, pk: int):
         HistoryEvent.objects
         .select_related("actor")
         .filter(content_type=person_ct, object_id=person.pk)
-        .order_by("-created_at")
+        .order_by("-created_at")[:25]
     )
 
     ACTION_LABELS = {
@@ -113,14 +115,31 @@ def person_detail(request, pk: int):
     for h in history:
         h.action_label = ACTION_LABELS.get(h.action, h.action.replace("_", " ").capitalize())
 
+    signals = (
+        Signal.objects
+        .select_related("type", "status", "assigned_to")
+        .filter(people=person)
+        .distinct()
+        .order_by("-created_at")[:10]
+    )
+
+    tasks = (
+        Task.objects
+        .select_related("type", "status", "assigned_to", "signal")
+        .filter(people=person, is_archived=False)
+        .distinct()
+        .order_by("due_at", "-created_at")[:10]
+    )
+
     return render(request, "core/people/detail.html", {
         "person": person,
         "form": form,
+        "signals": signals,
+        "tasks": tasks,
         "notes": notes,
         "history": history,
         "active_nav": "people",
     })
-
 @staff_required
 @transaction.atomic
 def person_update(request, pk: int):
@@ -135,7 +154,6 @@ def person_update(request, pk: int):
         "last_name": person.last_name,
         "email": person.email,
         "phone": person.phone,
-        "notes": person.notes,
     }
 
     form = PersonForm(request.POST, instance=person)
@@ -151,13 +169,35 @@ def person_update(request, pk: int):
         "last_name": person.last_name,
         "email": person.email,
         "phone": person.phone,
-        "notes": person.notes,
     }
 
     changes = {k: [before[k], after[k]] for k in before if before[k] != after[k]}
     if changes:
         log_history(person, request.user, "updated", changes)
         messages.success(request, "Persoon bijgewerkt.")
+
+    return redirect("people:detail", pk=person.pk)
+
+
+@staff_required
+@require_POST
+@transaction.atomic
+def person_update_description(request, pk: int):
+    person = get_object_or_404(Person, pk=pk)
+
+    new_description = (request.POST.get("description") or "").strip()
+    old_description = person.description or ""
+
+    if new_description != old_description:
+        person.description = new_description
+        person.save(update_fields=["description"])
+        log_history(
+            person,
+            request.user,
+            "updated",
+            {"description": [old_description, new_description]},
+        )
+        messages.success(request, "Omschrijving bijgewerkt.")
 
     return redirect("people:detail", pk=person.pk)
 

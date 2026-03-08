@@ -1,16 +1,16 @@
 {% extends "base.html" %}
-{% block title %}Tasks{% endblock %}
+{% block title %}Taken{% endblock %}
 
 {% block content %}
 <div class="page">
 
     <div class="page-header row">
         <div class="col-md-8 mb-3">
-            <h1>Tasks</h1>
+            <h1>Taken</h1>
             <p class="muted mb-0">Overzicht van alle taken</p>
         </div>
         <div class="col-md-4 mb-3" style="display:flex; align-items:flex-end; justify-content:flex-end;">
-            <a class="btn btn-primary" href="{% url 'tasks:create' %}">+ Nieuwe task</a>
+            <a class="btn btn-primary" href="{% url 'tasks:create' %}">+ Nieuwe taak</a>
         </div>
     </div>
 
@@ -85,7 +85,7 @@
 
                 {% if q or type_id or status_id or assignee_id or show_archived %}
                 <div class="col-12 mt-2">
-                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'tasks:list' %}">Reset</a>
+                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'tasks: == ' %}">Reset</a>
                 </div>
                 {% endif %}
             </div>
@@ -98,6 +98,12 @@
             <table class="table table-sm align-middle">
                 <thead class="table-light">
                     <tr>
+                        <th>
+                            <a href="?q={{ request.GET.q|default:'' }}&id={{ request.GET.id|default:'' }}&status={{ request.GET.status|default:'' }}&assignee={{ request.GET.assignee|default:'' }}{% if request.GET.archived == '1' %}&archived=1{% endif %}&sort=id&dir={% if sort == 'id' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                                #
+                                {% if sort == "id" %}{% if dir == "asc" %}▲{% else %}▼{% endif %}{% endif %}
+                            </a>
+                        </th>
                         <th>
                             <a href="?q={{ request.GET.q|default:'' }}&type={{ request.GET.type|default:'' }}&status={{ request.GET.status|default:'' }}&assignee={{ request.GET.assignee|default:'' }}{% if request.GET.archived == '1' %}&archived=1{% endif %}&sort=due_at&dir={% if sort == 'due_at' and dir == 'asc' %}desc{% else %}asc{% endif %}">
                                 Deadline
@@ -129,8 +135,16 @@
                 <tbody>
                     {% for t in tasks %}
                     <tr>
+
                         <td class="text-muted">
-                            {% if t.due_at %}{{ t.due_at|date:"d-m-Y H:i" }}{% else %}–{% endif %}
+                            {% if t.id %}
+                            {{ t.id }}
+                            {% else %}
+                            –
+                            {% endif %}
+                        </td>
+                        <td class="text-muted">
+                            {% if t.due_at %}{{ t.due_at|date:"d-m-Y" }}{% else %}–{% endif %}
                         </td>
                         <td>{{ t.type.name }}</td>
                         <td>

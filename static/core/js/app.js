@@ -1,4 +1,4 @@
-function () {
+document.addEventListener("DOMContentLoaded", function () {
     const toggles = document.querySelectorAll("[data-sidebar-toggle]");
     const sidebar = document.getElementById("sidebar");
 
@@ -9,7 +9,6 @@ function () {
         });
     });
 
-    // Click outside to close on mobile
     document.addEventListener("click", (e) => {
         if (!sidebar) return;
         const isOpen = sidebar.classList.contains("open");
@@ -21,4 +20,4 @@ function () {
             sidebar.classList.remove("open");
         }
     });
-}();
+});

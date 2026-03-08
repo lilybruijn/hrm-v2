@@ -13,8 +13,8 @@ class Person(models.Model):
 
     email = models.EmailField(blank=True)
     phone = models.CharField(max_length=30, blank=True)
-
-    notes = models.TextField(blank=True)
+    
+    description = models.TextField(blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
