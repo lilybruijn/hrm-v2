@@ -9,7 +9,6 @@ from core.models import Person, Status, SignalType, TaskType, Signal, Task
 User = get_user_model()
 fake = Faker("nl_NL")
 
-
 class Command(BaseCommand):
     help = "Seed database met faker data"
 
@@ -20,11 +19,18 @@ class Command(BaseCommand):
         # USERS
         # =====================
         if not User.objects.filter(username="admin").exists():
-            User.objects.create_superuser(
+            User.objects.update_or_create(
                 username="admin",
-                email="admin@hrm.local",
-                password="admin123"
+                defaults={
+                    "email": "admin@example.com",
+                    "is_staff": True,
+                    "is_superuser": True,
+                }
             )
+
+            u = User.objects.get(username="admin")
+            u.set_password("admin123")
+            u.save()
 
         staff_users = []
         for i in range(5):
