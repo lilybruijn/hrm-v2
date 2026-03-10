@@ -27,14 +27,19 @@ def signal_list(request):
     status_id = (request.GET.get("signal_status") or "").strip()
     type_id = (request.GET.get("signal_type") or "").strip()
     assignee_id = (request.GET.get("signal_assignee") or "").strip()
-    show_archived = request.GET.get("signal_archived") == "1"
+  
     person_id = (request.GET.get("signal_person") or "").strip()
+    archived = (request.GET.get("archived") or "").strip()
+
+    if archived == "1":
+        qs = qs.filter(is_archived=True)
+    elif archived == "0":
+        qs = qs.filter(is_archived=False)
+    # "" = alles
 
     if person_id.isdigit():
         qs = qs.filter(people__id=int(person_id)).distinct()
 
-    if not show_archived:
-        qs = qs.filter(is_archived=False)
 
     if assignee_id == "unassigned":
         qs = qs.filter(assigned_to__isnull=True)
@@ -88,6 +93,7 @@ def signal_list(request):
         .distinct()
         .order_by("username")
     )
+  
 
     return render(request, "core/signals/list.html", {
         "page_obj": page_obj,
@@ -98,7 +104,7 @@ def signal_list(request):
         "person_id": person_id,
         "assignee_id": assignee_id,
         "assignees": assignees,
-        "show_archived": show_archived,
+        "archived": archived,
         "statuses": statuses,
         "types": types,
         "people": people,
@@ -106,6 +112,33 @@ def signal_list(request):
         "dir": dir_,
         "active_nav": "signals",
     })
+
+@staff_required
+@require_POST
+@transaction.atomic
+def signal_delete(request, pk: int):
+    signal = get_object_or_404(Signal, pk=pk)
+
+    if not signal.is_archived:
+        messages.error(request, "Archiveer de melding eerst voordat je deze permanent verwijdert.")
+        return redirect("signals:list")
+
+    signal.delete()
+    messages.success(request, "Melding permanent verwijderd.")
+    return redirect("signals:list")
+
+@staff_required
+@require_POST
+@transaction.atomic
+def signal_restore(request, pk: int):
+    signal = get_object_or_404(Signal, pk=pk)
+
+    if signal.is_archived:
+        signal.is_archived = False
+        signal.save(update_fields=["is_archived"])
+        messages.success(request, "Melding hersteld.")
+
+    return redirect("signals:list")
 
 @staff_required
 @transaction.atomic
@@ -429,9 +462,27 @@ def signal_set_assignee(request, pk: int):
 @transaction.atomic
 def signal_toggle_archive(request, pk: int):
     signal = get_object_or_404(Signal, pk=pk)
+
     old = signal.is_archived
     signal.is_archived = not signal.is_archived
     signal.save(update_fields=["is_archived"])
+
     log_history(signal, request.user, "archived_toggled", {"is_archived": [old, signal.is_archived]})
     messages.success(request, "Archiefstatus bijgewerkt.")
-    return redirect("signals:detail", pk=signal.pk)
+
+    return redirect("signals:list")  
+
+@staff_required
+@require_POST
+@transaction.atomic
+def signal_toggle_archive_detail(request, pk: int):
+    signal = get_object_or_404(Signal, pk=pk)
+
+    old = signal.is_archived
+    signal.is_archived = not signal.is_archived
+    signal.save(update_fields=["is_archived"])
+
+    log_history(signal, request.user, "archived_toggled", {"is_archived": [old, signal.is_archived]})
+    messages.success(request, "Archiefstatus bijgewerkt.")
+
+    return redirect("signals:detail", pk=signal.pk)  

@@ -17,7 +17,7 @@
             <a class="btn btn-outline-secondary d-flex align-items-center" href="{% url 'tasks:list' %}">← Terug</a>
 
             {% if task.is_archived is not None %}
-            <form method="post" action="{% url 'tasks:toggle_archive' task.id %}">
+            <form method="post" action="{% url 'tasks:toggle_archive_detail' task.id %}">
                 {% csrf_token %}
                 <button class="btn {% if task.is_archived %}btn-success{% else %}btn-outline-danger{% endif %}">
                     {% if task.is_archived %}Terugzetten{% else %}Archiveren{% endif %}

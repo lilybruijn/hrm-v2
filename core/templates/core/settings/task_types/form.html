@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}
+    {% if mode == "create" %}
+        Taak type toevoegen
+    {% else %}
+        Taak type bewerken
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-header row">
+        <div class="col-md-8 mb-3">
+            <h1>
+                {% if mode == "create" %}
+                Taak type toevoegen
+                {% else %}
+                Taak type bewerken
+                {% endif %}
+            </h1>
+            <p class="muted mb-0">Beheer de instellingen voor taak types</p>
+        </div>
+        <div class="col-md-4 mb-3" style="display:flex; align-items:flex-end; justify-content:flex-end;">
+            <a class="btn btn-outline-secondary" href="{% url 'settings:task_type_list' %}">
+                Terug
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    <label for="{{ form.name.id_for_label }}" class="form-label">Naam</label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                    <div class="text-danger small mt-1">{{ form.name.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.sort_order.id_for_label }}" class="form-label">Volgorde</label>
+                    {{ form.sort_order }}
+                    {% if form.sort_order.errors %}
+                    <div class="text-danger small mt-1">{{ form.sort_order.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="form-check mb-3">
+                    {{ form.is_active }}
+                    <label for="{{ form.is_active.id_for_label }}" class="form-check-label">
+                        Actief
+                    </label>
+                    {% if form.is_active.errors %}
+                    <div class="text-danger small mt-1">{{ form.is_active.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        Opslaan
+                    </button>
+                    <a href="{% url 'settings:task_type_list' %}" class="btn btn-outline-secondary">
+                        Annuleren
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

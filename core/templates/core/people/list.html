@@ -35,6 +35,15 @@
                     </select>
                 </div>
 
+                <div class="col-12 col-md-2">
+                    <label class="form-label mb-1">Weergave</label>
+                    <select class="form-select" name="archived">
+                        <option value="" {% if archived == "" %}selected{% endif %}>Alles</option>
+                        <option value="0" {% if archived == "0" %}selected{% endif %}>Alleen actief</option>
+                        <option value="1" {% if archived == "1" %}selected{% endif %}>Alleen archief</option>
+                    </select>
+                </div>
+
                 <div class="col-12 col-md-3 d-grid">
                     <button class="btn btn-primary" type="submit">Filter</button>
                 </div>
@@ -128,9 +137,41 @@
                         </td>
                         <td class="text-muted">{{ p.created_at|date:"d-m-Y" }}</td>
                         <td class="text-end">
-                            <a class="btn btn-sm btn-outline-primary" href="{% url 'people:detail' p.id %}">
-                                Open
-                            </a>
+                            <div class="d-inline-flex gap-2">
+
+                                <a class="btn btn-sm btn-outline-primary"
+                                   href="{% url 'people:detail' p.id %}">
+                                    Open
+                                </a>
+
+                                {% if not p.is_archived %}
+                                <form method="post"
+                                      action="{% url 'people:toggle_archive' p.id %}"
+                                      onsubmit="return confirm('Weet je zeker dat je deze persoon wilt archiveren?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">
+                                        Archiveren
+                                    </button>
+                                </form>
+                                {% else %}
+                                <form method="post" action="{% url 'people:restore' p.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        Herstellen
+                                    </button>
+                                </form>
+
+                                <form method="post"
+                                      action="{% url 'people:delete' p.id %}"
+                                      onsubmit="return confirm('Weet je zeker dat je deze persoon permanent wilt verwijderen? Dit kan niet ongedaan worden gemaakt.');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        Verwijderen
+                                    </button>
+                                </form>
+                                {% endif %}
+
+                            </div>
                         </td>
                     </tr>
                     {% empty %}

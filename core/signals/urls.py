@@ -14,5 +14,8 @@ urlpatterns = [
     path("<int:pk>/assign/", views.signal_set_assignee, name="set_assignee"),
     path("<int:pk>/note/", views.signal_add_note, name="add_note"),
     path("<int:pk>/archive/", views.signal_toggle_archive, name="toggle_archive"),
+    path("<int:pk>/archive_detail", views.signal_toggle_archive_detail, name="toggle_archive_detail"),
     path("<int:pk>/body/", views.signal_update_body, name="update_body"),
+    path("<int:pk>/restore/", views.signal_restore, name="restore"),
+    path("<int:pk>/delete/", views.signal_delete, name="delete"),
 ]

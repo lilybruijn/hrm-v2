@@ -18,7 +18,7 @@
         <div class="card-body">
 
             <div class="row g-2 align-items-end">
-                <div class="col-12 col-md-3">
+                <div class="col-12 col-md-2">
                     <label class="form-label mb-1">Zoeken</label>
                     <input id="searchInput"
                            class="form-control"
@@ -79,30 +79,23 @@
                         {% endfor %}
                     </select>
                 </div>
-
-                <div class="col-12 col-md-1 d-grid">
-                    <button class="btn btn-primary" type="submit">Filter</button>
+                <div class="col-12 col-md-2">
+                    <label class="form-label mb-1">Weergave</label>
+                    <select class="form-select" name="archived">
+                        <option value="" {% if archived == "" %}selected{% endif %}>Alles</option>
+                        <option value="0" {% if archived == "0" %}selected{% endif %}>Alleen actief</option>
+                        <option value="1" {% if archived == "1" %}selected{% endif %}>Alleen archief</option>
+                    </select>
                 </div>
-
-                <div class="col-12">
-                    <div class="d-flex gap-3 align-items-center mt-2">
-                        <div class="form-check">
-                            <input class="form-check-input"
-                                   type="checkbox"
-                                   id="signal_archived"
-                                   name="signal_archived"
-                                   value="1"
-                                   {% if show_archived %}checked{% endif %}>
-                            <label class="form-check-label" for="signal_archived">Toon archief</label>
-                        </div>
-
-                        {% if signal_q or type_id or person_id or status_id or assignee_id or show_archived %}
-                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'signals:list' %}">Reset</a>
-                        {% endif %}
+                <div class="row g-2 align-items-start">
+                    <div class="col-2">
+                        <button class="btn btn-primary" type="submit">Filter</button>
+                        <a class="btn btn-secondary" href="{% url 'signals:list' %}">Reset filters</a>
                     </div>
                 </div>
+
+                </div>
             </div>
-        </div>
     </form>
 
     <div class="card p-3">
@@ -166,7 +159,6 @@
                             {% endif %}
                         </th>
                         <th>Personen</th>
-                        <th>Omschrijving</th>
                         <th>
                             {% if sort == 'assigned_to' %}
                             {% if dir == 'asc' %}
@@ -215,7 +207,6 @@
                             {% endif %}
                             {% endwith %}
                         </td>
-                        <td class="text-muted">{{ s.body|truncatechars:80 }}</td>
                         <td>
                             {% if s.assigned_to %}
                             {{ s.assigned_to.username }}
@@ -224,7 +215,42 @@
                             {% endif %}
                         </td>
                         <td class="text-end">
-                            <a class="btn btn-sm btn-outline-primary" href="{% url 'signals:detail' s.id %}">Open</a>
+                            <div class="d-inline-flex gap-2">
+
+                                <a class="btn btn-sm btn-outline-primary"
+                                   href="{% url 'signals:detail' s.id %}">
+                                    Open
+                                </a>
+
+                                {% if not s.is_archived %}
+                                <form method="post"
+                                      action="{% url 'signals:toggle_archive' s.id %}"
+                                      onsubmit="return confirm('Weet je zeker dat je deze melding wilt archiveren?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">
+                                        Archiveren
+                                    </button>
+                                </form>
+                                {% else %}
+                                <form method="post"
+                                      action="{% url 'signals:restore' s.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        Herstellen
+                                    </button>
+                                </form>
+
+                                <form method="post"
+                                      action="{% url 'signals:delete' s.id %}"
+                                      onsubmit="return confirm('Weet je zeker dat je deze melding permanent wilt verwijderen? Dit kan niet ongedaan worden gemaakt.');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        Verwijderen
+                                    </button>
+                                </form>
+                                {% endif %}
+
+                            </div>
                         </td>
                     </tr>
                     {% empty %}

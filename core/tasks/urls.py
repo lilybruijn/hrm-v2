@@ -9,6 +9,9 @@ urlpatterns = [
     path("<int:pk>/", views.task_detail, name="detail"),
     path("<int:pk>/update/", views.task_update, name="update"),
     path("<int:pk>/note/", views.task_add_note, name="add_note"),
-    path("<int:pk>/archive/", views.task_toggle_archive, name="toggle_archive"),
+    path("<int:pk>/archive_detail", views.task_toggle_archive_detail, name="toggle_archive_detail"),
     path("<int:pk>/body/", views.task_update_body, name="update_body"),
+    path("<int:pk>/archive/", views.task_toggle_archive, name="toggle_archive"),
+    path("<int:pk>/restore/", views.task_restore, name="restore"),
+    path("<int:pk>/delete/", views.task_delete, name="delete"),
 ]

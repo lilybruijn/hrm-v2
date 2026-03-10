@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Taak statussen{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-header row">
+        <div class="col-md-8 mb-3">
+            <h1>Task statussen</h1>
+            <p class="muted mb-0">Beheer de beschikbare statussen voor taken</p>
+        </div>
+        <div class="col-md-4 mb-3" style="display:flex; align-items:flex-end; justify-content:flex-end;">
+            <a class="btn btn-primary" href="{% url 'settings:task_status_create' %}">
+                + Nieuwe taak status
+            </a>
+        </div>
+    </div>
+
+    <form method="get" class="card mb-3" autocomplete="off">
+        <div class="card-body">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-3">
+                    <label class="form-label mb-1">Weergave</label>
+                    <select name="archived" class="form-select">
+                        <option value="" {% if archived == "" %}selected{% endif %}>Alles</option>
+                        <option value="0" {% if archived == "0" %}selected{% endif %}>Alleen actief</option>
+                        <option value="1" {% if archived == "1" %}selected{% endif %}>Alleen archief</option>
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-2 d-grid">
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                </div>
+
+                {% if archived != "" %}
+                <div class="col-12 col-md-2 d-grid">
+                    <a href="{% url 'settings:task_status_list' %}" class="btn btn-outline-secondary">
+                        Reset
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+
+    <div class="card p-3">
+        <div class="table-responsive">
+            <table class="table table-sm align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Naam</th>
+                        <th>Volgorde</th>
+                        <th>Status</th>
+                        <th class="text-end">Acties</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.sort_order }}</td>
+                        <td>
+                            {% if item.is_active %}
+                            <span class="badge bg-success">Actief</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Gearchiveerd</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-2">
+                                <a class="btn btn-sm btn-outline-primary"
+                                   href="{% url 'settings:task_status_update' item.id %}">
+                                    Bewerken
+                                </a>
+
+                                {% if item.is_active %}
+                                <form method="post"
+                                      action="{% url 'settings:task_status_archive' item.id %}"
+                                      onsubmit="return confirm('Weet je zeker dat je deze taak status wilt archiveren?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">
+                                        Archiveren
+                                    </button>
+                                </form>
+                                {% else %}
+                                <form method="post"
+                                      action="{% url 'settings:task_status_restore' item.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        Herstellen
+                                    </button>
+                                </form>
+
+                                <form method="post"
+                                      action="{% url 'settings:task_status_delete' item.id %}"
+                                      onsubmit="return confirm('Weet je zeker dat je deze taak status permanent wilt verwijderen? Dit kan niet ongedaan worden gemaakt.');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        Permanent verwijderen
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">
+                            Geen taak statussen gevonden.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

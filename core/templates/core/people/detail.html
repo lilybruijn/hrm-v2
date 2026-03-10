@@ -15,9 +15,25 @@
         </div>
 
         <div class="d-flex gap-2 align-items-stretch">
-            <a class="btn btn-outline-secondary d-flex align-items-center" href="{% url 'people:list' %}">
+            <a class="btn btn-outline-secondary d-flex align-items-center"
+               href="{% url 'people:list' %}">
                 ← Terug
             </a>
+
+            <form method="post"
+                  action="{% url 'people:toggle_archive_detail' person.id %}"
+                  class="d-inline">
+                {% csrf_token %}
+                {% if person.is_archived %}
+                <button class="btn btn-success">
+                    Terugzetten
+                </button>
+                {% else %}
+                <button class="btn btn-outline-danger">
+                    Archiveren
+                </button>
+                {% endif %}
+            </form>
         </div>
     </div>
 

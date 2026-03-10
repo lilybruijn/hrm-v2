@@ -15,7 +15,8 @@ class Person(models.Model):
     phone = models.CharField(max_length=30, blank=True)
     
     description = models.TextField(blank=True)
-
+    
+    is_archived = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
