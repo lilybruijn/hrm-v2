@@ -42,7 +42,7 @@
             </a>
 
             <form method="post"
-                  action="{% url 'signals:toggle_archive' signal.id %}"
+                  action="{% url 'signals:toggle_archive_detail' signal.id %}"
                   class="d-inline">
                 {% csrf_token %}
                 {% if signal.is_archived %}

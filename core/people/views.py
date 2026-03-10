@@ -13,7 +13,7 @@ from core.models.people import Person
 from core.models.core import Signal, Task
 from .forms import PersonForm
 
-from core.signals.services import log_history  # hergebruik jouw logger
+from core.signals.services import log_history
 
 
 @staff_required
@@ -21,48 +21,30 @@ def person_list(request):
     qs = Person.objects.all()
 
     q = (request.GET.get("q") or "").strip()
-    person_type = (request.GET.get("type") or "").strip()  # student|employee|"" (alles)
+    archived = (request.GET.get("archived") or "").strip()
 
-    # sorting
-    SORT_MAP = {
-        "id": "id",
-        "name": "last_name",
-        "type": "person_type",
-        "email": "email",
-        "phone": "phone",
-        "created_at": "created_at",
-    }
-    sort = (request.GET.get("sort") or "name").strip()
-    dir_ = (request.GET.get("dir") or "asc").strip().lower()
-    if dir_ not in ("asc", "desc"):
-        dir_ = "asc"
+    if archived == "1":
+        qs = qs.filter(is_archived=True)
+    elif archived == "0":
+        qs = qs.filter(is_archived=False)
 
     if q:
         qs = qs.filter(
-            Q(first_name__icontains=q)
-            | Q(last_name__icontains=q)
-            | Q(email__icontains=q)
-            | Q(phone__icontains=q)
+            Q(first_name__icontains=q) |
+            Q(last_name__icontains=q) |
+            Q(email__icontains=q)
         )
 
-    if person_type in ("student", "employee"):
-        qs = qs.filter(person_type=person_type)
-
-    sort_field = SORT_MAP.get(sort, "last_name")
-    prefix = "-" if dir_ == "desc" else ""
-    qs = qs.order_by(f"{prefix}{sort_field}", "first_name", "id")
+    qs = qs.order_by("last_name", "first_name")
 
     paginator = Paginator(qs, 25)
     page_obj = paginator.get_page(request.GET.get("page"))
 
     return render(request, "core/people/list.html", {
-        "page_obj": page_obj,
         "people": page_obj.object_list,
+        "page_obj": page_obj,
         "q": q,
-        "person_type": person_type,
-        "sort": sort,
-        "dir": dir_,
-        "type_choices": Person.PERSON_TYPE_CHOICES,
+        "archived": archived,
         "active_nav": "people",
     })
 
@@ -85,6 +67,7 @@ def person_create(request):
         "mode": "create",
         "active_nav": "people",
     })
+
 
 @staff_required
 def person_detail(request, pk: int):
@@ -140,6 +123,8 @@ def person_detail(request, pk: int):
         "history": history,
         "active_nav": "people",
     })
+
+
 @staff_required
 @transaction.atomic
 def person_update(request, pk: int):
@@ -221,3 +206,65 @@ def person_add_note(request, pk: int):
     log_history(person, request.user, "note_added", {"note_id": [None, note.id]})
     messages.success(request, "Notitie toegevoegd.")
     return redirect("people:detail", pk=person.pk)
+
+
+@staff_required
+@require_POST
+@transaction.atomic
+def person_toggle_archive(request, pk: int):
+    person = get_object_or_404(Person, pk=pk)
+
+    person.is_archived = not person.is_archived
+    person.save(update_fields=["is_archived"])
+
+    messages.success(request, "Archiefstatus bijgewerkt.")
+    return redirect("people:list")
+
+
+@staff_required
+@require_POST
+@transaction.atomic
+def person_toggle_archive_detail(request, pk: int):
+    person = get_object_or_404(Person, pk=pk)
+
+    person.is_archived = not person.is_archived
+    person.save(update_fields=["is_archived"])
+
+    messages.success(request, "Archiefstatus bijgewerkt.")
+    return redirect("people:detail", pk=person.pk)
+
+
+@staff_required
+@require_POST
+@transaction.atomic
+def person_restore(request, pk: int):
+    person = get_object_or_404(Person, pk=pk)
+
+    if person.is_archived:
+        person.is_archived = False
+        person.save(update_fields=["is_archived"])
+        messages.success(request, "Persoon hersteld.")
+
+    return redirect("people:list")
+
+
+@staff_required
+@require_POST
+@transaction.atomic
+def person_delete(request, pk: int):
+    person = get_object_or_404(Person, pk=pk)
+
+    if not person.is_archived:
+        messages.error(request, "Archiveer de persoon eerst voordat je deze permanent verwijdert.")
+        return redirect("people:list")
+
+    has_signals = person.signals.exists()
+    has_tasks = person.tasks.exists()
+
+    if has_signals or has_tasks:
+        messages.error(request, "Deze persoon is nog gekoppeld aan meldingen of taken.")
+        return redirect("people:list")
+
+    person.delete()
+    messages.success(request, "Persoon permanent verwijderd.")
+    return redirect("people:list")

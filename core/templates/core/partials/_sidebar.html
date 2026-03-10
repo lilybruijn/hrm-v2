@@ -20,10 +20,10 @@
                 <span>Dashboard</span>
             </a>
 
-            <a class="nav-item disabled" href="#" title="Komt later">
+
+            <a class="nav-item {% if active_nav == 'settings' %}active{% endif %}" href="{% url 'settings:index' %}">
                 <span class="nav-ico">⚙</span>
                 <span>Instellingen</span>
-                <span class="pill">binnenkort</span>
             </a>
 
             <a class="nav-item {% if active_nav == 'people' %}active{% endif %}" href="{% url 'people:list' %}">

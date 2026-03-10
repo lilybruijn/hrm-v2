@@ -15,7 +15,7 @@
                 <div class="card-kicker">Meldingen</div>
                 <div class="card-title">Open</div>
             </div>
-            <div class="metric">0</div>
+            <div class="metric">{{ signals_open_count }}</div>
         </div>
         <div class="card-body">
             <div class="muted">Hier komt straks het “open meldingen” overzicht.</div>
@@ -28,7 +28,7 @@
                 <div class="card-kicker">Taken</div>
                 <div class="card-title">Binnenkort</div>
             </div>
-            <div class="metric">0</div>
+            <div class="metric">{{ tasks_open_count }}</div>
         </div>
         <div class="card-body">
             <div class="muted">Hier komt straks het “taken met deadline” blok.</div>
@@ -50,46 +50,27 @@
 </div>
 
 <div class="grid grid-2 mt-16">
+
     <div class="card">
         <div class="card-head">
             <div>
-                <div class="card-title">Recente activiteit</div>
+                <div class="card-kicker">People</div>
+                <div class="card-title">Actief</div>
             </div>
-            <a class="btn btn-soft" href="{% url 'activities:list' %}">Bekijk alles</a>
+            <div class="metric">{{ people_active_count }}</div>
         </div>
         <div class="card-body">
-            <div class="list">
-                {% for a in activities %}
-                <div class="list-row d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="rounded-circle {{ a.color }}" style="width:10px;height:10px;"></div>
-
-                        <div>
-                            <div class="fw-semibold">
-                                {% if a.url %}
-                                <a href="{{ a.url }}" class="text-decoration-none">
-                                    {{ a.title }}
-                                </a>
-                                {% else %}
-                                {{ a.title }}
-                                {% endif %}
-                            </div>
-                            <div class="text-muted small">
-                                {{ a.subtitle }}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="text-muted small">
-                        {{ a.time|date:"d-m H:i" }}
-                    </div>
-                </div>
-                {% empty %}
-                <div class="text-muted">Nog geen recente activiteit.</div>
-                {% endfor %}
+            <div class="muted">
+                Actieve personen in het systeem.
+            </div>
+            <div class="mt-3">
+                <a class="btn btn-soft" href="{% url 'people:list' %}">
+                    Bekijk personen
+                </a>
             </div>
         </div>
     </div>
+
 
     <div class="card">
         <div class="card-head">
@@ -102,7 +83,8 @@
                 <a class="btn btn-soft" href="/admin/">Open Admin Portal</a>
                 <a class="btn btn-soft" href="{% url 'signals:create' %}">Maak melding</a>
                 <a class="btn btn-soft" href="{% url 'tasks:create' %}" ">Maak taak</a>
-</div>
+            </div>
+        </div>
         </div>
     </div>
 </div>

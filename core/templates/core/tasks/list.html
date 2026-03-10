@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load querystring %}
 {% block title %}Taken{% endblock %}
 
 {% block content %}
@@ -14,23 +15,21 @@
         </div>
     </div>
 
-    <!-- Filters -->
-    <form method="get" class="card mb-3" autocomplete="new-password" id="tasks-filter-form">
+    <form id="tasks-filter-form" method="get" class="card mb-3" autocomplete="new-password">
         <div class="card-body">
-            <input type="text" name="fake" style="display:none" autocomplete="off">
-
             <div class="row g-2 align-items-end">
+
                 <div class="col-12 col-md-4">
                     <label class="form-label mb-1">Zoeken</label>
                     <input class="form-control"
                            type="text"
-                           name="q"
-                           value="{{ q }}"
+                           name="task_q"
+                           value="{{ task_q|default:'' }}"
                            placeholder="Zoeken..."
                            autocomplete="new-password">
                 </div>
 
-                <div class="col-12 col-md-2">
+                <div class="col-12 col-md-4">
                     <label class="form-label mb-1">Type</label>
                     <select class="form-select" name="task_type" autocomplete="off">
                         <option value="" {% if not type_id %}selected{% endif %}>Alle</option>
@@ -42,7 +41,7 @@
                     </select>
                 </div>
 
-                <div class="col-12 col-md-2">
+                <div class="col-12 col-md-4">
                     <label class="form-label mb-1">Status</label>
                     <select class="form-select" name="task_status" autocomplete="off">
                         <option value="" {% if not status_id %}selected{% endif %}>Alle</option>
@@ -66,67 +65,109 @@
                     </select>
                 </div>
 
-                <div class="col-12 col-md-1 d-grid">
-                    <button class="btn btn-primary" type="submit">Filter</button>
+                <div class="col-12 col-md-3">
+                    <label class="form-label mb-1">Persoon</label>
+                    <select class="form-select" name="task_person" autocomplete="off">
+                        <option value="" {% if not person_id %}selected{% endif %}>Alles</option>
+                        {% for p in people %}
+                        <option value="{{ p.id }}" {% if person_id == p.id|stringformat:"s" %}selected{% endif %}>
+                            {{ p.first_name }} {{ p.last_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
                 </div>
 
-                <div class="col-12 mt-2">
-                    <div class="form-check">
-                        <input class="form-check-input"
-                               type="checkbox"
-                               id="archived"
-                               name="task_archived"
-                               value="1"
-                               {% if show_archived %}checked{% endif %}
-                               autocomplete="new-password">
-                        <label class="form-check-label" for="archived">Toon archief</label>
+                <div class="col-12 col-md-3">
+                    <label class="form-label mb-1">Melding</label>
+                    <select class="form-select" name="task_signal" autocomplete="off">
+                        <option value="" {% if not signal_id %}selected{% endif %}>Alle</option>
+                        {% for signal in signals %}
+                        <option value="{{ signal.id }}" {% if signal_id == signal.id|stringformat:"s" %}selected{% endif %}>
+                            #{{ signal.id }}{% if signal.name %} - {{ signal.name }}{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label mb-1">Weergave</label>
+                    <select class="form-select" name="archived">
+                        <option value="" {% if archived == "" %}selected{% endif %}>Alles</option>
+                        <option value="0" {% if archived == "0" %}selected{% endif %}>Alleen actief</option>
+                        <option value="1" {% if archived == "1" %}selected{% endif %}>Alleen archief</option>
+                    </select>
+                </div>
+
+                <div class="row g-2 align-items-start">
+                    <div class="col-12">
+                        <button class="btn btn-primary" type="submit">Filter</button>
+                        <a class="btn btn-secondary" href="{% url 'tasks:list' %}">Reset filters</a>
                     </div>
                 </div>
 
-                {% if q or type_id or status_id or assignee_id or show_archived %}
-                <div class="col-12 mt-2">
-                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'tasks:list' %}">Reset</a>
-                </div>
-                {% endif %}
             </div>
         </div>
     </form>
 
-    <!-- Table -->
     <div class="card p-3">
         <div class="table-responsive">
             <table class="table table-sm align-middle">
                 <thead class="table-light">
                     <tr>
                         <th>
-                            <a href="?q={{ request.GET.q|default:'' }}&id={{ request.GET.id|default:'' }}&status={{ request.GET.status|default:'' }}&assignee={{ request.GET.assignee|default:'' }}{% if request.GET.archived == '1' %}&archived=1{% endif %}&sort=id&dir={% if sort == 'id' and dir == 'asc' %}desc{% else %}asc{% endif %}">
-                                #
-                                {% if sort == "id" %}{% if dir == "asc" %}▲{% else %}▼{% endif %}{% endif %}
-                            </a>
+                            {% if sort == 'id' %}
+                            {% if dir == 'asc' %}
+                            <a href="?{% qs_set sort='id' dir='desc' page='' %}"># ▲</a>
+                            {% else %}
+                            <a href="?{% qs_set sort='id' dir='asc' page='' %}"># ▼</a>
+                            {% endif %}
+                            {% else %}
+                            <a href="?{% qs_set sort='id' dir='asc' page='' %}">#</a>
+                            {% endif %}
                         </th>
                         <th>
-                            <a href="?q={{ request.GET.q|default:'' }}&type={{ request.GET.type|default:'' }}&status={{ request.GET.status|default:'' }}&assignee={{ request.GET.assignee|default:'' }}{% if request.GET.archived == '1' %}&archived=1{% endif %}&sort=due_at&dir={% if sort == 'due_at' and dir == 'asc' %}desc{% else %}asc{% endif %}">
-                                Deadline
-                                {% if sort == "due_at" %}{% if dir == "asc" %}▲{% else %}▼{% endif %}{% endif %}
-                            </a>
+                            {% if sort == 'due_at' %}
+                            {% if dir == 'asc' %}
+                            <a href="?{% qs_set sort='due_at' dir='desc' page='' %}">Deadline ▲</a>
+                            {% else %}
+                            <a href="?{% qs_set sort='due_at' dir='asc' page='' %}">Deadline ▼</a>
+                            {% endif %}
+                            {% else %}
+                            <a href="?{% qs_set sort='due_at' dir='asc' page='' %}">Deadline</a>
+                            {% endif %}
                         </th>
                         <th>
-                            <a href="?q={{ request.GET.q|default:'' }}&type={{ request.GET.type|default:'' }}&status={{ request.GET.status|default:'' }}&assignee={{ request.GET.assignee|default:'' }}{% if request.GET.archived == '1' %}&archived=1{% endif %}&sort=type&dir={% if sort == 'type' and dir == 'asc' %}desc{% else %}asc{% endif %}">
-                                Type
-                                {% if sort == "type" %}{% if dir == "asc" %}▲{% else %}▼{% endif %}{% endif %}
-                            </a>
+                            {% if sort == 'type' %}
+                            {% if dir == 'asc' %}
+                            <a href="?{% qs_set sort='type' dir='desc' page='' %}">Type ▲</a>
+                            {% else %}
+                            <a href="?{% qs_set sort='type' dir='asc' page='' %}">Type ▼</a>
+                            {% endif %}
+                            {% else %}
+                            <a href="?{% qs_set sort='type' dir='asc' page='' %}">Type</a>
+                            {% endif %}
                         </th>
                         <th>
-                            <a href="?q={{ request.GET.q|default:'' }}&type={{ request.GET.type|default:'' }}&status={{ request.GET.status|default:'' }}&assignee={{ request.GET.assignee|default:'' }}{% if request.GET.archived == '1' %}&archived=1{% endif %}&sort=status&dir={% if sort == 'status' and dir == 'asc' %}desc{% else %}asc{% endif %}">
-                                Status
-                                {% if sort == "status" %}{% if dir == "asc" %}▲{% else %}▼{% endif %}{% endif %}
-                            </a>
+                            {% if sort == 'status' %}
+                            {% if dir == 'asc' %}
+                            <a href="?{% qs_set sort='status' dir='desc' page='' %}">Status ▲</a>
+                            {% else %}
+                            <a href="?{% qs_set sort='status' dir='asc' page='' %}">Status ▼</a>
+                            {% endif %}
+                            {% else %}
+                            <a href="?{% qs_set sort='status' dir='asc' page='' %}">Status</a>
+                            {% endif %}
                         </th>
                         <th>
-                            <a href="?q={{ request.GET.q|default:'' }}&type={{ request.GET.type|default:'' }}&status={{ request.GET.status|default:'' }}&assignee={{ request.GET.assignee|default:'' }}{% if request.GET.archived == '1' %}&archived=1{% endif %}&sort=assigned_to&dir={% if sort == 'assigned_to' and dir == 'asc' %}desc{% else %}asc{% endif %}">
-                                Toegewezen
-                                {% if sort == "assigned_to" %}{% if dir == "asc" %}▲{% else %}▼{% endif %}{% endif %}
-                            </a>
+                            {% if sort == 'assigned_to' %}
+                            {% if dir == 'asc' %}
+                            <a href="?{% qs_set sort='assigned_to' dir='desc' page='' %}">Toegewezen ▲</a>
+                            {% else %}
+                            <a href="?{% qs_set sort='assigned_to' dir='asc' page='' %}">Toegewezen ▼</a>
+                            {% endif %}
+                            {% else %}
+                            <a href="?{% qs_set sort='assigned_to' dir='asc' page='' %}">Toegewezen</a>
+                            {% endif %}
                         </th>
                         <th class="text-end"></th>
                     </tr>
@@ -135,14 +176,7 @@
                 <tbody>
                     {% for t in tasks %}
                     <tr>
-
-                        <td class="text-muted">
-                            {% if t.id %}
-                            {{ t.id }}
-                            {% else %}
-                            –
-                            {% endif %}
-                        </td>
+                        <td class="text-muted">{{ t.id }}</td>
                         <td class="text-muted">
                             {% if t.due_at %}{{ t.due_at|date:"d-m-Y" }}{% else %}–{% endif %}
                         </td>
@@ -154,14 +188,51 @@
                             <span class="text-muted">–</span>
                             {% endif %}
                         </td>
-                        <td>{{ t.assigned_to.username }}</td>
+                        <td>
+                            {% if t.assigned_to %}
+                            {{ t.assigned_to.username }}
+                            {% else %}
+                            <span class="text-muted">–</span>
+                            {% endif %}
+                        </td>
                         <td class="text-end">
-                            <a class="btn btn-sm btn-outline-primary" href="{% url 'tasks:detail' t.id %}">Open</a>
+                            <div class="d-inline-flex gap-2">
+                                <a class="btn btn-sm btn-outline-primary" href="{% url 'tasks:detail' t.id %}">
+                                    Open
+                                </a>
+
+                                {% if not t.is_archived %}
+                                <form method="post"
+                                      action="{% url 'tasks:toggle_archive' t.id %}"
+                                      onsubmit="return confirm('Weet je zeker dat je deze taak wilt archiveren?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">
+                                        Archiveren
+                                    </button>
+                                </form>
+                                {% else %}
+                                <form method="post" action="{% url 'tasks:restore' t.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        Herstellen
+                                    </button>
+                                </form>
+
+                                <form method="post"
+                                      action="{% url 'tasks:delete' t.id %}"
+                                      onsubmit="return confirm('Weet je zeker dat je deze taak permanent wilt verwijderen? Dit kan niet ongedaan worden gemaakt.');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        Verwijderen
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center text-muted py-4">Geen tasks gevonden.</td>
+                        <td colspan="6" class="text-center text-muted py-4">Geen taken gevonden.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -169,19 +240,16 @@
         </div>
     </div>
 
-    <!-- Pagination -->
     {% if page_obj.paginator.num_pages > 1 %}
     <div class="pagination">
         {% if page_obj.has_previous %}
-        <a class="btn btn-sm"
-           href="?page={{ page_obj.previous_page_number }}&q={{ request.GET.q|default:'' }}&type={{ request.GET.type|default:'' }}&status={{ request.GET.status|default:'' }}&assignee={{ request.GET.assignee|default:'' }}{% if request.GET.archived == '1' %}&archived=1{% endif %}&sort={{ sort }}&dir={{ dir }}">←</a>
+        <a class="btn btn-sm" href="?{% qs_set page=page_obj.previous_page_number %}">←</a>
         {% endif %}
 
         <span class="muted">Pagina {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
 
         {% if page_obj.has_next %}
-        <a class="btn btn-sm"
-           href="?page={{ page_obj.next_page_number }}&q={{ request.GET.q|default:'' }}&type={{ request.GET.type|default:'' }}&status={{ request.GET.status|default:'' }}&assignee={{ request.GET.assignee|default:'' }}{% if request.GET.archived == '1' %}&archived=1{% endif %}&sort={{ sort }}&dir={{ dir }}">→</a>
+        <a class="btn btn-sm" href="?{% qs_set page=page_obj.next_page_number %}">→</a>
         {% endif %}
     </div>
     {% endif %}

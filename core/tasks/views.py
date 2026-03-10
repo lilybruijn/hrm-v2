@@ -22,11 +22,13 @@ def task_list(request):
     status_id = (request.GET.get("task_status") or "").strip()
     type_id = (request.GET.get("task_type") or "").strip()
     assignee_id = (request.GET.get("task_assignee") or "").strip()
-    show_archived = request.GET.get("task_archived") == "1"
     person_id = (request.GET.get("task_person") or "").strip()
     signal_id = (request.GET.get("task_signal") or "").strip()
+    archived = (request.GET.get("archived") or "").strip()
 
-    if not show_archived:
+    if archived == "1":
+        qs = qs.filter(is_archived=True)
+    elif archived == "0":
         qs = qs.filter(is_archived=False)
 
     if assignee_id.isdigit():
@@ -74,6 +76,7 @@ def task_list(request):
     statuses = Status.objects.filter(scope="task", is_active=True).order_by("sort_order", "name")
     types = TaskType.objects.filter(is_active=True).order_by("sort_order", "name")
     people = Person.objects.order_by("last_name", "first_name")
+    signals = Signal.objects.filter(is_archived=False).order_by("-id")
 
     assignees = (
         User.objects
@@ -92,10 +95,11 @@ def task_list(request):
         "type_id": type_id,
         "assignee_id": assignee_id,
         "assignees": assignees,
-        "show_archived": show_archived,
         "statuses": statuses,
         "types": types,
         "people": people,
+        "signals": signals,
+        "archived": archived,
         "sort": sort,
         "dir": dir_,
         "active_nav": "tasks",
@@ -295,6 +299,34 @@ def task_update_body(request, pk: int):
 @staff_required
 @require_POST
 @transaction.atomic
+def task_restore(request, pk: int):
+    task = get_object_or_404(Task, pk=pk)
+
+    if task.is_archived:
+        task.is_archived = False
+        task.save(update_fields=["is_archived"])
+        messages.success(request, "Taak hersteld.")
+
+    return redirect("tasks:list")
+
+
+@staff_required
+@require_POST
+@transaction.atomic
+def task_delete(request, pk: int):
+    task = get_object_or_404(Task, pk=pk)
+
+    if not task.is_archived:
+        messages.error(request, "Archiveer de taak eerst voordat je deze permanent verwijdert.")
+        return redirect("tasks:list")
+
+    task.delete()
+    messages.success(request, "Taak permanent verwijderd.")
+    return redirect("tasks:list")
+
+@staff_required
+@require_POST
+@transaction.atomic
 def task_add_note(request, pk: int):
     task = get_object_or_404(Task, pk=pk)
     body = (request.POST.get("body") or "").strip()
@@ -313,6 +345,18 @@ def task_add_note(request, pk: int):
 @require_POST
 @transaction.atomic
 def task_toggle_archive(request, pk: int):
+    task = get_object_or_404(Task, pk=pk)
+    old = task.is_archived
+    task.is_archived = not task.is_archived
+    task.save(update_fields=["is_archived"])
+    log_history(task, request.user, "archived_toggled", {"is_archived": [old, task.is_archived]})
+    messages.success(request, "Archiefstatus bijgewerkt.")
+    return redirect("tasks:list")
+
+@staff_required
+@require_POST
+@transaction.atomic
+def task_toggle_archive_detail(request, pk: int):
     task = get_object_or_404(Task, pk=pk)
     old = task.is_archived
     task.is_archived = not task.is_archived

@@ -17,4 +17,7 @@ urlpatterns = [
 
     ## TASKS
     path("tasks/", include("core.tasks.urls")),
+
+    ## SETTINGS
+    path("settings/", include("core.settings.urls")),
 ]
