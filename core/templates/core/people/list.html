@@ -25,7 +25,7 @@
 
                 <div class="col-12 col-md-3">
                     <label class="form-label mb-1">Type</label>
-                    <select class="form-select" name="type">
+                    <select class="form-select js-select" name="type">
                         <option value="">Alles</option>
                         {% for value, label in type_choices %}
                         <option value="{{ value }}" {% if person_type == value %}selected{% endif %}>

@@ -14,18 +14,17 @@ from core.signals.services import log_history
 
 User = get_user_model()
 
-
 @staff_required
 def task_list(request):
     qs = Task.objects.select_related("type", "status", "assigned_to", "signal").prefetch_related("people")
 
-    q = (request.GET.get("q") or "").strip()
-    status_id = (request.GET.get("status") or "").strip()
-    type_id = (request.GET.get("type") or "").strip()
-    assignee_id = (request.GET.get("assignee") or "").strip()
-    show_archived = request.GET.get("archived") == "1"
-    person_id = (request.GET.get("person") or "").strip()
-    signal_id = (request.GET.get("signal") or "").strip()
+    task_q = (request.GET.get("task_q") or "").strip()
+    status_id = (request.GET.get("task_status") or "").strip()
+    type_id = (request.GET.get("task_type") or "").strip()
+    assignee_id = (request.GET.get("task_assignee") or "").strip()
+    show_archived = request.GET.get("task_archived") == "1"
+    person_id = (request.GET.get("task_person") or "").strip()
+    signal_id = (request.GET.get("task_signal") or "").strip()
 
     if not show_archived:
         qs = qs.filter(is_archived=False)
@@ -45,10 +44,10 @@ def task_list(request):
     if signal_id.isdigit():
         qs = qs.filter(signal_id=int(signal_id))
 
-    if q:
+    if task_q:
         qs = qs.filter(
-            Q(body__icontains=q) |
-            Q(assigned_to__username__icontains=q)
+            Q(body__icontains=task_q) |
+            Q(assigned_to__username__icontains=task_q)
         )
 
     SORT_MAP = {
@@ -86,7 +85,7 @@ def task_list(request):
     return render(request, "core/tasks/list.html", {
         "page_obj": page_obj,
         "tasks": page_obj.object_list,
-        "q": q,
+        "task_q": task_q,
         "person_id": person_id,
         "signal_id": signal_id,
         "status_id": status_id,

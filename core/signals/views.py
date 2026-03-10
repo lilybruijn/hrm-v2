@@ -19,17 +19,16 @@ from .services import log_history, create_signal_notifications
 
 User = get_user_model()
 
-
 @staff_required
 def signal_list(request):
     qs = Signal.objects.select_related("type", "status", "assigned_to").prefetch_related("people")
 
-    q = (request.GET.get("q") or "").strip()
-    status_id = (request.GET.get("status") or "").strip()
-    type_id = (request.GET.get("type") or "").strip()
-    assignee_id = (request.GET.get("assignee") or "").strip()
-    show_archived = request.GET.get("archived") == "1"
-    person_id = (request.GET.get("person") or "").strip()
+    signal_q = (request.GET.get("signal_q") or "").strip()
+    status_id = (request.GET.get("signal_status") or "").strip()
+    type_id = (request.GET.get("signal_type") or "").strip()
+    assignee_id = (request.GET.get("signal_assignee") or "").strip()
+    show_archived = request.GET.get("signal_archived") == "1"
+    person_id = (request.GET.get("signal_person") or "").strip()
 
     if person_id.isdigit():
         qs = qs.filter(people__id=int(person_id)).distinct()
@@ -48,14 +47,16 @@ def signal_list(request):
     if type_id.isdigit():
         qs = qs.filter(type_id=int(type_id))
 
-    if q:
+    if signal_q:
         qs = qs.filter(
-            Q(body__icontains=q) |
-            Q(assigned_to__username__icontains=q)
+            Q(name__icontains=signal_q) |
+            Q(body__icontains=signal_q) |
+            Q(assigned_to__username__icontains=signal_q)
         )
 
     SORT_MAP = {
         "id": "id",
+        "name": "name",
         "active_from": "active_from",
         "type": "type__name",
         "status": "status__name",
@@ -65,6 +66,7 @@ def signal_list(request):
 
     sort = (request.GET.get("sort") or "active_from").strip()
     dir_ = (request.GET.get("dir") or "desc").strip().lower()
+
     if dir_ not in ("asc", "desc"):
         dir_ = "desc"
 
@@ -90,7 +92,7 @@ def signal_list(request):
     return render(request, "core/signals/list.html", {
         "page_obj": page_obj,
         "signals": page_obj.object_list,
-        "q": q,
+        "signal_q": signal_q,
         "status_id": status_id,
         "type_id": type_id,
         "person_id": person_id,
@@ -104,7 +106,6 @@ def signal_list(request):
         "dir": dir_,
         "active_nav": "signals",
     })
-
 
 @staff_required
 @transaction.atomic

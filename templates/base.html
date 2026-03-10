@@ -64,13 +64,23 @@
             crossorigin="anonymous"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
-
+    {% block extra_js %}
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            document.querySelectorAll(".js-multiselect").forEach(function (el) {
+            document.querySelectorAll(".js-select").forEach(function (el) {
                 if (el.tomselect) return;
 
-                console.log("multiselect", el.name, "options:", el.options.length);
+                new TomSelect(el, {
+                    create: false,
+                    persist: false,
+                    hidePlaceholder: true,
+                    dropdownParent: "body",
+                    items: el.value ? [el.value] : []
+                });
+            });
+
+            document.querySelectorAll(".js-multiselect").forEach(function (el) {
+                if (el.tomselect) return;
 
                 new TomSelect(el, {
                     plugins: {
@@ -84,26 +94,53 @@
                     closeAfterSelect: false,
                     maxItems: null,
                     hideSelected: false,
-                    dropdownParent: "body"
-                });
-            });
-
-            document.querySelectorAll(".js-select").forEach(function (el) {
-                if (el.tomselect) return;
-
-                console.log("select", el.name, "options:", el.options.length);
-
-                new TomSelect(el, {
-                    create: false,
-                    persist: false,
-                    hidePlaceholder: true,
-                    dropdownParent: "body"
+                    dropdownParent: "body",
+                    items: Array.from(el.selectedOptions).map(option => option.value)
                 });
             });
         });
 
-    </script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById("signals-filter-form");
+            if (!form) return;
 
-    {% block extra_js %}{% endblock %}
+            const params = new URLSearchParams(window.location.search);
+
+            const q = form.querySelector('[name="signal_q"]');
+            const person = form.querySelector('[name="signal_person"]');
+            const type = form.querySelector('[name="signal_type"]');
+            const status = form.querySelector('[name="signal_status"]');
+            const assignee = form.querySelector('[name="signal_assignee"]');
+            const archived = form.querySelector('[name="signal_archived"]');
+
+            if (q) q.value = params.get("signal_q") || "";
+            if (person) person.value = params.get("signal_person") || "";
+            if (type) type.value = params.get("signal_type") || "";
+            if (status) status.value = params.get("signal_status") || "";
+            if (assignee) assignee.value = params.get("signal_assignee") || "";
+            if (archived) archived.checked = params.get("signal_archived") === "1";
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById("tasks-filter-form");
+            if (!form) return;
+
+            const params = new URLSearchParams(window.location.search);
+
+            const q = form.querySelector('[name="task_q"]');
+            const person = form.querySelector('[name="task_person"]');
+            const type = form.querySelector('[name="task_type"]');
+            const status = form.querySelector('[name="task_status"]');
+            const assignee = form.querySelector('[name="task_assignee"]');
+            const archived = form.querySelector('[name="task_archived"]');
+
+            if (q) q.value = params.get("task_q") || "";
+            if (person) person.value = params.get("task_person") || "";
+            if (type) type.value = params.get("task_type") || "";
+            if (status) status.value = params.get("task_status") || "";
+            if (assignee) assignee.value = params.get("task_assignee") || "";
+            if (archived) archived.checked = params.get("task_archived") === "1";
+        });
+    </script>{% endblock %}
 </body>
 </html>
