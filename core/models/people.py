@@ -9,7 +9,7 @@ class Person(models.Model):
     ]
 
     person_type = models.CharField(max_length=20, choices=PERSON_TYPE_CHOICES, default="student")
-    
+
     PERSON_STATUS_CHOICES = [
         ("active", "Actief"),
         ("inactive", "Inactief"),
@@ -22,6 +22,7 @@ class Person(models.Model):
     phone = models.CharField(max_length=50, blank=True)
 
     birth_date = models.DateField(null=True, blank=True)
+    bsn = models.CharField(max_length=9, blank=True)
 
     street = models.CharField(max_length=255, blank=True)
     house_number = models.CharField(max_length=20, blank=True)

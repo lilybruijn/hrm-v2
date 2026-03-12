@@ -4,7 +4,9 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
+from django.template.loader import render_to_string
+from django.http import HttpResponse
 
 from core.auth import staff_required
 from core.models.history import HistoryEvent
@@ -12,9 +14,28 @@ from core.models.notes import Note
 from core.models.people import Person
 from core.models.core import Signal, Task
 from .forms import PersonForm
-
 from core.signals.services import log_history
 
+def get_person_history(person):
+    person_ct = ContentType.objects.get_for_model(Person)
+
+    history = (
+        HistoryEvent.objects
+        .select_related("actor")
+        .filter(content_type=person_ct, object_id=person.pk)
+        .order_by("-created_at")[:25]
+    )
+
+    action_labels = {
+        "created": "Persoon aangemaakt",
+        "updated": "Persoon bijgewerkt",
+        "note_added": "Notitie toegevoegd",
+    }
+
+    for h in history:
+        h.action_label = action_labels.get(h.action, h.action.replace("_", " ").capitalize())
+
+    return history
 
 @staff_required
 def person_list(request):
@@ -83,12 +104,7 @@ def person_detail(request, pk: int):
         .order_by("-created_at")
     )
 
-    history = (
-        HistoryEvent.objects
-        .select_related("actor")
-        .filter(content_type=person_ct, object_id=person.pk)
-        .order_by("-created_at")[:25]
-    )
+    history = get_person_history(person)
 
     ACTION_LABELS = {
         "created": "Persoon aangemaakt",
@@ -114,6 +130,14 @@ def person_detail(request, pk: int):
         .order_by("due_at", "-created_at")[:10]
     )
 
+    student_profile = getattr(person, "student_profile", None)
+    employee_profile = getattr(person, "employee_profile", None)
+
+    contacts = person.person_contacts.select_related(
+        "contact_person",
+        "relation_type"
+    )
+
     return render(request, "core/people/detail.html", {
         "person": person,
         "form": form,
@@ -122,6 +146,9 @@ def person_detail(request, pk: int):
         "notes": notes,
         "history": history,
         "active_nav": "people",
+        "student_profile": student_profile,
+        "employee_profile": employee_profile,
+        "contacts": contacts,
     })
 
 
@@ -268,3 +295,125 @@ def person_delete(request, pk: int):
     person.delete()
     messages.success(request, "Persoon permanent verwijderd.")
     return redirect("people:list")
+
+@staff_required
+@require_http_methods(["GET"])
+def person_description_view_partial(request, pk: int):
+    person = get_object_or_404(Person, pk=pk)
+
+    return render(request, "core/people/partials/person_description_view.html", {
+        "person": person,
+    })
+
+@staff_required
+@require_http_methods(["GET", "POST"])
+def person_description_edit_partial(request, pk: int):
+    person = get_object_or_404(Person, pk=pk)
+
+    if request.method == "POST":
+        old_description = person.description or ""
+        new_description = (request.POST.get("description") or "").strip()
+
+        if new_description != old_description:
+            person.description = new_description
+            person.save(update_fields=["description"])
+
+            log_history(
+                person,
+                request.user,
+                "updated",
+                {"description": [old_description, new_description]},
+            )
+
+        history = get_person_history(person)
+
+        return render(request, "core/people/partials/person_description_response.html", {
+            "person": person,
+            "history": history,
+        })
+
+    return render(request, "core/people/partials/person_description_edit.html", {
+        "person": person,
+    })
+
+@staff_required
+@require_http_methods(["GET"])
+def person_data_view_partial(request, pk: int):
+    person = get_object_or_404(Person, pk=pk)
+
+    return render(request, "core/people/partials/person_data_view.html", {
+        "person": person,
+        "student_profile": getattr(person, "student_profile", None),
+        "employee_profile": getattr(person, "employee_profile", None),
+    })
+
+@staff_required
+@require_http_methods(["GET", "POST"])
+def person_data_edit_partial(request, pk: int):
+    person = get_object_or_404(Person, pk=pk)
+
+    if request.method == "POST":
+        before = {
+            "person_type": person.person_type,
+            "first_name": person.first_name,
+            "last_name": person.last_name,
+            "birth_date": person.birth_date,
+            "bsn": person.bsn,
+            "email": person.email,
+            "phone": person.phone,
+            "street": person.street,
+            "house_number": person.house_number,
+            "postal_code": person.postal_code,
+            "city": person.city,
+        }
+
+        form = PersonForm(request.POST, instance=person)
+        if form.is_valid():
+            person = form.save()
+
+            after = {
+                "person_type": person.person_type,
+                "first_name": person.first_name,
+                "last_name": person.last_name,
+                "birth_date": person.birth_date,
+                "bsn": person.bsn,
+                "email": person.email,
+                "phone": person.phone,
+                "street": person.street,
+                "house_number": person.house_number,
+                "postal_code": person.postal_code,
+                "city": person.city,
+            }
+
+            changes = {k: [before[k], after[k]] for k in before if before[k] != after[k]}
+            if changes:
+                log_history(person, request.user, "updated", changes)
+
+            history = get_person_history(person)
+
+            return render(request, "core/people/partials/person_data_response.html", {
+                "person": person,
+                "student_profile": getattr(person, "student_profile", None),
+                "employee_profile": getattr(person, "employee_profile", None),
+                "history": history,
+            })
+    else:
+        form = PersonForm(instance=person)
+
+    return render(request, "core/people/partials/person_data_edit.html", {
+        "person": person,
+        "form": form,
+        "student_profile": getattr(person, "student_profile", None),
+        "employee_profile": getattr(person, "employee_profile", None),
+    })
+
+@staff_required
+@require_http_methods(["GET"])
+def person_history_partial(request, pk: int):
+    person = get_object_or_404(Person, pk=pk)
+    history = get_person_history(person)
+
+    return render(request, "core/people/partials/person_history.html", {
+        "person": person,
+        "history": history,
+    })

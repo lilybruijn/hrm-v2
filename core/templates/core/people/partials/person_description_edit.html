@@ -1,0 +1,35 @@
+<div id="person-description-card">
+    <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+        <div>
+            <h6 class="mb-1">Omschrijving bewerken</h6>
+            <div class="text-muted small">Werk de dossieromschrijving bij</div>
+        </div>
+    </div>
+
+    <hr class="my-3">
+
+    <form
+        hx-post="{% url 'people:description_edit_partial' person.id %}"
+        hx-target="#person-description-card"
+        hx-swap="outerHTML">
+
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <textarea class="form-control" name="description" rows="8">{{ person.description }}</textarea>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary btn-sm" type="submit">Opslaan</button>
+
+            <button
+                class="btn btn-outline-secondary btn-sm"
+                type="button"
+                hx-get="{% url 'people:description_view_partial' person.id %}"
+                hx-target="#person-description-card"
+                hx-swap="outerHTML">
+                Annuleren
+            </button>
+        </div>
+    </form>
+</div>
