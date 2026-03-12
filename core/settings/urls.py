@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 
 app_name = "settings"
@@ -33,4 +33,6 @@ urlpatterns = [
     path("task-statuses/<int:pk>/archive/", views.task_status_archive, name="task_status_archive"),
     path("task-statuses/<int:pk>/restore/", views.task_status_restore, name="task_status_restore"),
     path("task-statuses/<int:pk>/delete/", views.task_status_delete, name="task_status_delete"),
+
+    
 ]
