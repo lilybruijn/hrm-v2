@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}{{ document.title }}{% endblock %}
+{% block page_title %}{{ document.title }}{% endblock %}
+
+{% block page_actions %}
+
+{% if document.file %}
+<a href="{{ document.file.url }}" class="btn btn-primary" target="_blank">
+Download
+</a>
+{% endif %}
+
+<a href="{% url 'documents:document_regenerate' document.id %}" class="btn btn-outline-secondary">
+Opnieuw genereren
+</a>
+<a href="{% url 'documents:document_variables' document.id %}" class="btn btn-outline-secondary">
+Bewerken
+</a>
+
+{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+
+<div class="col-12 col-lg-6">
+
+<div class="card shadow-sm">
+<div class="card-body">
+
+<h5 class="card-title">Document</h5>
+
+<hr>
+
+<div><strong>Template:</strong> {{ document.template.name }}</div>
+<div><strong>Persoon:</strong> {{ document.person.full_name }}</div>
+
+{% if document.organization %}
+<div><strong>Organisatie:</strong> {{ document.organization.name }}</div>
+{% endif %}
+
+<div><strong>Status:</strong> {{ document.status }}</div>
+<div><strong>Gegenereerd:</strong> {{ document.generated_at|date:"d-m-Y H:i" }}</div>
+
+{% if document.generated_by %}
+<div><strong>Door:</strong> {{ document.generated_by.username }}</div>
+{% endif %}
+
+</div>
+</div>
+
+</div>
+
+
+<div class="col-12 col-lg-6">
+
+<div class="card shadow-sm">
+<div class="card-body">
+
+<h5 class="card-title">Gebruikte variabelen</h5>
+
+<hr>
+
+<div class="list-group list-group-flush">
+
+{% for key, value in document.rendered_data.items %}
+
+<div class="list-group-item px-0">
+
+<div class="text-muted small">{{ key }}</div>
+<div>{{ value }}</div>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+</div>
+</div>
+
+</div>
+
+</div>
+
+{% endblock %}

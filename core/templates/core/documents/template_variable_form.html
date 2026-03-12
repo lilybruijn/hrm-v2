@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% block title %}Variabele toevoegen{% endblock %}
-{% block page_title %}Variabele toevoegen{% endblock %}
+{% block title %}{% if variable %}Variabele bewerken{% else %}Variabele toevoegen{% endif %}{% endblock %}
+{% block page_title %}{% if variable %}Variabele bewerken{% else %}Variabele toevoegen{% endif %}{% endblock %}
 
 {% block page_subtitle %}
 <div class="text-muted small">{{ template.name }}</div>
@@ -13,35 +13,35 @@
             {% csrf_token %}
 
             <div class="row g-3">
-                <div class="col-12 col-md-6" style="display: flex; flex-flow: column nowrap; justify-content: space-between;">
-                    <label class="form-label">Key <br /><small>(variabele naam in template, bijvoorbeeld 'werknemer_voornaam')</small></label>
+                <div class="col-12 col-md-6">
+                    <label class="form-label">Key</label>
                     {{ form.key }}
                 </div>
-                <div class="col-12 col-md-6" style="display: flex; flex-flow: column nowrap; justify-content: space-between;">
-                    <label class="form-label">Label <br /><small>(zichtbaar in formulier, bijvoorbeeld 'Voornaam')</small></label>
+                <div class="col-12 col-md-6">
+                    <label class="form-label">Label</label>
                     {{ form.label }}
                 </div>
-                <div class="col-12 col-md-4" style="display: flex; flex-flow: column nowrap; justify-content: space-between;">
+                <div class="col-12 col-md-4">
                     <label class="form-label">Type veld</label>
                     {{ form.field_type }}
                 </div>
-                <div class="col-12 col-md-4" style="display: flex; flex-flow: column nowrap; justify-content: space-between;">
+                <div class="col-12 col-md-4">
                     <label class="form-label">Bron</label>
                     {{ form.source_type }}
                 </div>
-                <div class="col-12 col-md-4" style="display: flex; flex-flow: column nowrap; justify-content: space-between;">
-                    <label class="form-label">Bronpad <br /><small>(variabele uit code, bijvoorbeeld 'first_name')</small></label>
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Bronpad</label>
                     {{ form.source_path }}
                 </div>
-                <div class="col-12 col-md-6" style="display: flex; flex-flow: column nowrap; justify-content: space-between;">
-                    <label class="form-label">Standaardwaarde</label>
+                <div class="col-12 col-md-6">
+                    <label class="form-label">Defaultwaarde</label>
                     {{ form.default_value }}
                 </div>
-                <div class="col-12 col-md-6" style="display: flex; flex-flow: column nowrap; justify-content: space-between;">
+                <div class="col-12 col-md-6">
                     <label class="form-label">Helptekst</label>
                     {{ form.help_text }}
                 </div>
-                <div class="col-12 col-md-3" style="display: flex; flex-flow: column nowrap; justify-content: space-between;">
+                <div class="col-12 col-md-3">
                     <label class="form-label">Volgorde</label>
                     {{ form.sort_order }}
                 </div>
@@ -51,12 +51,7 @@
                         <label class="form-check-label">Verplicht</label>
                     </div>
                 </div>
-                <div class="col-12 col-md-3">
-                    <div class="form-check mt-4 pt-2">
-                        {{ form.is_active }}
-                        <label class="form-check-label">Actief</label>
-                    </div>
-                </div>
+                
             </div>
 
             <button type="submit" class="btn btn-primary mt-3">Opslaan</button>

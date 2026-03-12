@@ -9,7 +9,11 @@
 {% endblock %}
 
 {% block page_actions %}
+<a href="{% url 'documents:template_update' template.id %}" class="btn btn-outline-secondary">Bewerken</a>
 <a href="{% url 'documents:template_variable_create' template.id %}" class="btn btn-primary">+ Variabele toevoegen</a>
+<a href="{% url 'documents:template_scan_placeholders' template.id %}" class="btn btn-outline-secondary">
+Variabelen scannen
+</a>
 {% endblock %}
 
 {% block content %}
@@ -24,6 +28,7 @@
                 <div><strong>Doelgroep:</strong> {{ template.get_target_type_display }}</div>
                 <div><strong>Output:</strong> {{ template.get_output_format_display }}</div>
                 <div><strong>Actief:</strong> {{ template.is_active|yesno:"Ja,Nee" }}</div>
+                <div><strong>Gearchiveerd:</strong> {{ template.is_archived|yesno:"Ja,Nee" }}</div>
                 {% if template.description %}
                     <hr>
                     <div>{{ template.description|linebreaksbr }}</div>
@@ -41,15 +46,46 @@
                 <div class="list-group list-group-flush">
                     {% for variable in variables %}
                         <div class="list-group-item px-0">
-                            <div class="fw-semibold">{{ variable.label }} <span class="text-muted">({{ variable.key }})</span></div>
-                            <div class="text-muted small">
-                                {{ variable.get_field_type_display }} •
-                                {{ variable.get_source_type_display }}{% if variable.source_path %}: {{ variable.source_path }}{% endif %}
-                                {% if variable.required %} • Verplicht{% endif %}
+                            <div class="d-flex justify-content-between align-items-start gap-3">
+                                <div>
+                                    <div class="fw-semibold">
+                                        {{ variable.label }}
+                                        <span class="text-muted">({{ variable.key }})</span>
+                                    </div>
+                                    <div class="text-muted small">
+                                        {{ variable.get_field_type_display }} •
+                                        {{ variable.get_source_type_display }}{% if variable.source_path %}: {{ variable.source_path }}{% endif %}
+                                        {% if variable.required %} • Verplicht{% endif %}
+                                        {% if variable.is_archived %} • Gearchiveerd{% endif %}
+                                    </div>
+                                    {% if variable.help_text %}
+                                        <div class="small mt-1">{{ variable.help_text }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'documents:template_variable_update' variable.id %}" class="btn btn-sm btn-outline-secondary">
+                                        Bewerken
+                                    </a>
+
+                                    {% if variable.is_archived %}
+                                        <form method="post" action="{% url 'documents:template_variable_restore' variable.id %}">
+                                            {% csrf_token %}
+                                            <button class="btn btn-sm btn-success" type="submit">Herstellen</button>
+                                        </form>
+                                    {% else %}
+                                        <form method="post" action="{% url 'documents:template_variable_archive' variable.id %}">
+                                            {% csrf_token %}
+                                            <button class="btn btn-sm btn-outline-warning" type="submit">Archiveren</button>
+                                        </form>
+                                    {% endif %}
+
+                                    <form method="post" action="{% url 'documents:template_variable_delete' variable.id %}">
+                                        {% csrf_token %}
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Verwijderen</button>
+                                    </form>
+                                </div>
                             </div>
-                            {% if variable.help_text %}
-                                <div class="small mt-1">{{ variable.help_text }}</div>
-                            {% endif %}
                         </div>
                     {% empty %}
                         <div class="text-muted">Nog geen variabelen toegevoegd.</div>
