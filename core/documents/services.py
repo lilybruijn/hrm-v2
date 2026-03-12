@@ -17,7 +17,6 @@ def resolve_variable_value(variable, person=None, organization=None):
         return getattr(profile, variable.source_path, "")
 
     return variable.default_value or ""
-
 from io import BytesIO
 from pathlib import Path
 
@@ -25,18 +24,46 @@ from django.core.files.base import ContentFile
 from docxtpl import DocxTemplate
 
 
-def generate_docx_for_document(document):
-    template_path = document.template.template_file.path
-    context = document.rendered_data or {}
+def build_nested_context(flat_data):
+    context = {}
 
-    doc = DocxTemplate(template_path)
+    for key, value in (flat_data or {}).items():
+        if "." not in key:
+            context[key] = value
+            continue
+
+        parts = key.split(".")
+        current = context
+
+        for part in parts[:-1]:
+            if part not in current or not isinstance(current[part], dict):
+                current[part] = {}
+            current = current[part]
+
+        current[parts[-1]] = value
+
+    return context
+
+
+def generate_docx_for_document(document):
+    template_path = Path(document.template.template_file.path)
+
+    if not template_path.exists():
+        raise FileNotFoundError(f"Templatebestand niet gevonden: {template_path}")
+
+    flat_context = document.rendered_data or {}
+    context = build_nested_context(flat_context)
+
+    doc = DocxTemplate(str(template_path))
     doc.render(context)
 
     buffer = BytesIO()
     doc.save(buffer)
     buffer.seek(0)
 
-    safe_title = "".join(c for c in document.title if c.isalnum() or c in (" ", "-", "_")).strip()
+    safe_title = "".join(
+        c for c in document.title if c.isalnum() or c in (" ", "-", "_")
+    ).strip()
     safe_title = safe_title.replace(" ", "_") or f"document_{document.pk}"
 
     filename = f"{safe_title}.docx"
