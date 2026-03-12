@@ -1,11 +1,13 @@
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
+
 from core.auth import staff_required
 from core.models import DocumentTemplate, TemplateVariable, GeneratedDocument, Person
+
 from .forms import DocumentTemplateForm, TemplateVariableForm, GeneratedDocumentCreateForm
 
-from .services import resolve_variable_value, generate_docx_for_document
+from .services import resolve_variable_value, generate_docx_for_document, sync_template_variables_from_docx
 
 @staff_required
 def template_list(request):
@@ -26,14 +28,22 @@ def template_list(request):
         "active_nav": "settings",
     })
 
-
 @staff_required
 def template_create(request):
     if request.method == "POST":
         form = DocumentTemplateForm(request.POST, request.FILES)
         if form.is_valid():
             template = form.save()
-            messages.success(request, "Documentsjabloon aangemaakt.")
+            created_variables = sync_template_variables_from_docx(template)
+
+            if created_variables:
+                messages.success(
+                    request,
+                    f"Documentsjabloon aangemaakt. {len(created_variables)} variabele(n) automatisch herkend."
+                )
+            else:
+                messages.success(request, "Documentsjabloon aangemaakt.")
+
             return redirect("documents:template_detail", pk=template.pk)
     else:
         form = DocumentTemplateForm()
@@ -117,10 +127,9 @@ def person_document_variables(request, document_pk):
     person = document.person
     organization = document.organization
 
-    variables = template.variables.filter(is_archived=False)
+    variables = list(template.variables.filter(is_archived=False))
 
     if request.method == "POST":
-
         rendered_data = {}
 
         for var in variables:
@@ -136,14 +145,16 @@ def person_document_variables(request, document_pk):
 
         generate_docx_for_document(document)
 
-        messages.success(request, "Document gegenereerd.")
-        return redirect("people:detail", pk=person.pk)
-
-
-    variables = list(template.variables.filter(is_archived=False))
+        messages.success(request, "Document opgeslagen.")
+        return redirect("documents:document_detail", pk=document.pk)
 
     for var in variables:
-        var.resolved_value = resolve_variable_value(var, person, organization)
+        existing_value = (document.rendered_data or {}).get(var.key)
+
+        if existing_value not in [None, ""]:
+            var.resolved_value = existing_value
+        else:
+            var.resolved_value = resolve_variable_value(var, person, organization)
 
     return render(request, "core/documents/document_variables_form.html", {
         "document": document,
@@ -195,3 +206,164 @@ def template_delete(request, pk: int):
 
     messages.success(request, "Documentsjabloon permanent verwijderd.")
     return redirect("documents:template_list")
+
+@staff_required
+def document_detail(request, pk: int):
+    document = get_object_or_404(
+        GeneratedDocument.objects.select_related(
+            "template",
+            "person",
+            "organization",
+            "generated_by"
+        ),
+        pk=pk
+    )
+
+    return render(request, "core/documents/document_detail.html", {
+        "document": document,
+        "active_nav": "people",
+    })
+
+
+@staff_required
+def document_regenerate(request, pk: int):
+    document = get_object_or_404(GeneratedDocument, pk=pk)
+
+    generate_docx_for_document(document)
+
+    messages.success(request, "Document opnieuw gegenereerd.")
+    return redirect("documents:document_detail", pk=document.pk)
+
+@staff_required
+def template_update(request, pk: int):
+    template = get_object_or_404(DocumentTemplate, pk=pk)
+
+    if request.method == "POST":
+        form = DocumentTemplateForm(request.POST, request.FILES, instance=template)
+        if form.is_valid():
+            template = form.save()
+            created_variables = sync_template_variables_from_docx(template)
+
+            if created_variables:
+                messages.success(
+                    request,
+                    f"Documentsjabloon bijgewerkt. {len(created_variables)} nieuwe variabele(n) automatisch herkend."
+                )
+            else:
+                messages.success(request, "Documentsjabloon bijgewerkt.")
+
+            return redirect("documents:template_detail", pk=template.pk)
+    else:
+        form = DocumentTemplateForm(instance=template)
+
+    return render(request, "core/documents/template_form.html", {
+        "form": form,
+        "mode": "update",
+        "template": template,
+        "active_nav": "settings",
+    })
+
+
+@staff_required
+@require_POST
+def template_archive(request, pk: int):
+    template = get_object_or_404(DocumentTemplate, pk=pk)
+    template.is_archived = True
+    template.save(update_fields=["is_archived"])
+    messages.success(request, "Documentsjabloon gearchiveerd.")
+    return redirect("documents:template_list")
+
+
+@staff_required
+@require_POST
+def template_restore(request, pk: int):
+    template = get_object_or_404(DocumentTemplate, pk=pk)
+    template.is_archived = False
+    template.save(update_fields=["is_archived"])
+    messages.success(request, "Documentsjabloon hersteld.")
+    return redirect("documents:template_list")
+
+
+@staff_required
+@require_POST
+def template_delete(request, pk: int):
+    template = get_object_or_404(DocumentTemplate, pk=pk)
+
+    generated_count = template.generated_documents.count()
+    if generated_count > 0:
+        messages.error(
+            request,
+            f"Dit documentsjabloon kan niet verwijderd worden omdat het al in {generated_count} document(en) is gebruikt. Archiveer het sjabloon in plaats daarvan."
+        )
+        return redirect("documents:template_list")
+
+    template.delete()
+    messages.success(request, "Documentsjabloon permanent verwijderd.")
+    return redirect("documents:template_list")
+
+
+@staff_required
+def template_variable_update(request, pk: int):
+    variable = get_object_or_404(TemplateVariable, pk=pk)
+
+    if request.method == "POST":
+        form = TemplateVariableForm(request.POST, instance=variable)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Variabele bijgewerkt.")
+            return redirect("documents:template_detail", pk=variable.template.pk)
+    else:
+        form = TemplateVariableForm(instance=variable)
+
+    return render(request, "core/documents/template_variable_form.html", {
+        "template": variable.template,
+        "form": form,
+        "variable": variable,
+        "active_nav": "settings",
+    })
+
+
+@staff_required
+@require_POST
+def template_variable_archive(request, pk: int):
+    variable = get_object_or_404(TemplateVariable, pk=pk)
+    variable.is_archived = True
+    variable.save(update_fields=["is_archived"])
+    messages.success(request, "Variabele gearchiveerd.")
+    return redirect("documents:template_detail", pk=variable.template.pk)
+
+
+@staff_required
+@require_POST
+def template_variable_restore(request, pk: int):
+    variable = get_object_or_404(TemplateVariable, pk=pk)
+    variable.is_archived = False
+    variable.save(update_fields=["is_archived"])
+    messages.success(request, "Variabele hersteld.")
+    return redirect("documents:template_detail", pk=variable.template.pk)
+
+
+@staff_required
+@require_POST
+def template_variable_delete(request, pk: int):
+    variable = get_object_or_404(TemplateVariable, pk=pk)
+    template_pk = variable.template.pk
+    variable.delete()
+    messages.success(request, "Variabele verwijderd.")
+    return redirect("documents:template_detail", pk=template_pk)
+
+@staff_required
+def template_scan_placeholders(request, pk: int):
+    template = get_object_or_404(DocumentTemplate, pk=pk)
+
+    created_variables = sync_template_variables_from_docx(template)
+
+    if created_variables:
+        messages.success(
+            request,
+            f"{len(created_variables)} nieuwe variabele(n) automatisch herkend."
+        )
+    else:
+        messages.info(request, "Geen nieuwe variabelen gevonden.")
+
+    return redirect("documents:template_detail", pk=template.pk)

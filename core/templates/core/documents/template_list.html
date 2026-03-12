@@ -33,13 +33,15 @@
                             </a>
                             <div class="text-muted small">
                                 {{ template.document_type.label }} • {{ template.get_target_type_display }} • {{ template.get_output_format_display }}
-                                {% if template.is_archived %}
-                                    • <span class="text-danger">Gearchiveerd</span>
-                                {% endif %}
+                                {% if template.is_archived %} • <span class="text-danger">Gearchiveerd</span>{% endif %}
                             </div>
                         </div>
 
                         <div class="d-flex gap-2">
+                            <a href="{% url 'documents:template_update' template.id %}" class="btn btn-sm btn-outline-secondary">
+                                Bewerken
+                            </a>
+
                             {% if template.is_archived %}
                                 <form method="post" action="{% url 'documents:template_restore' template.id %}">
                                     {% csrf_token %}
