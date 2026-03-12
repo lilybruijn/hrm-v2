@@ -9,3 +9,4 @@ tzdata==2025.3
 whitenoise==6.11.0
 psycopg2-binary
 python-dotenv
+docxtpl==0.16.7
