@@ -44,8 +44,11 @@
                     </select>
                 </div>
 
-                <div class="col-12 col-md-3 d-grid">
-                    <button class="btn btn-primary" type="submit">Filter</button>
+                <div class="row g-2 align-items-start">
+                    <div class="col-2">
+                        <button class="btn btn-primary" type="submit">Filter</button>
+                        <a class="btn btn-secondary" href="{% url 'people:list' %}">Reset filters</a>
+                    </div>
                 </div>
 
                 {% if q or person_type or sort or dir %}
