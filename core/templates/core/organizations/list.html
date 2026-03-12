@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Organisaties{% endblock %}
+{% block page_title %}Organisaties{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'organizations:create' %}" class="btn btn-primary">+ Organisatie toevoegen</a>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-body">
+
+        <form method="get" class="mb-3">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-3">
+                    <label class="form-label">Archief</label>
+                    <select name="archived" class="form-select" onchange="this.form.submit()">
+                        <option value="" {% if archived == "" %}selected{% endif %}>Alles</option>
+                        <option value="0" {% if archived == "0" %}selected{% endif %}>Actief</option>
+                        <option value="1" {% if archived == "1" %}selected{% endif %}>Gearchiveerd</option>
+                    </select>
+                </div>
+            </div>
+        </form>
+
+        <div class="list-group list-group-flush">
+            {% for organization in organizations %}
+                <div class="list-group-item px-0">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+                        <div>
+                            <a href="{% url 'organizations:detail' organization.id %}" class="text-decoration-none">
+                                <div class="fw-semibold">{{ organization.name }}</div>
+                            </a>
+                            <div class="text-muted small">
+                                {{ organization.organization_type.label }}
+                                {% if organization.is_archived %} • <span class="text-danger">Gearchiveerd</span>{% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'organizations:update' organization.id %}" class="btn btn-sm btn-outline-secondary">Bewerken</a>
+
+                            {% if organization.is_archived %}
+                                <form method="post" action="{% url 'organizations:restore' organization.id %}">
+                                    {% csrf_token %}
+                                    <button class="btn btn-sm btn-success" type="submit">Herstellen</button>
+                                </form>
+                            {% else %}
+                                <form method="post" action="{% url 'organizations:archive' organization.id %}">
+                                    {% csrf_token %}
+                                    <button class="btn btn-sm btn-outline-warning" type="submit">Archiveren</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="text-muted">Nog geen organisaties.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

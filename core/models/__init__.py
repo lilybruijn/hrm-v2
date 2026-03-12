@@ -9,6 +9,8 @@ from .settings import SettingOption
 from .organizations import Organization
 from .contacts import ContactPerson, PersonContact
 from .documents import DocumentTemplate, TemplateVariable, GeneratedDocument
+from .jobcoaching import JobCoachingPeriod
+from .wage_values import WageValuePeriod
 
 __all__ = [
     "Signal", "Task",
@@ -18,5 +20,7 @@ __all__ = [
     "Person", "StudentProfile", "EmployeeProfile",
     "SettingOption", "Organization",
     "ContactPerson", "PersonContact",
-    "DocumentTemplate", "TemplateVariable", "GeneratedDocument"
+    "DocumentTemplate", "TemplateVariable", "GeneratedDocument",
+    "JobCoachingPeriod",
+    "WageValuePeriod",
 ]

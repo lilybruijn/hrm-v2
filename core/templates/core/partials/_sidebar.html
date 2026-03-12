@@ -31,6 +31,21 @@
                 <span>Personen</span>
             </a>
 
+            <a class="nav-item {% if active_nav == 'organizations' %}active{% endif %}" href="{% url 'organizations:list' %}">
+                <span class="nav-ico">🏢</span>
+                <span>Organisaties</span>
+            </a>
+
+            <a class="nav-item {% if active_nav == 'jobcoaching' %}active{% endif %}" href="{% url 'jobcoaching:list' %}">
+                <span class="nav-ico">🧑‍🏫</span>
+                <span>Jobcoaching</span>
+            </a>
+
+            <a class="nav-item {% if active_nav == 'wage_values' %}active{% endif %}" href="{% url 'wage_values:list' %}">
+                <span class="nav-ico">📊</span>
+                <span>Loonwaardes</span>
+            </a>
+
             <a class="nav-item {% if active_nav == 'activities' %}active{% endif %}"
                href="{% url 'activities:list' %}">
                 <span class="nav-ico">🕘</span>

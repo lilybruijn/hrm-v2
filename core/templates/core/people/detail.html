@@ -149,7 +149,16 @@
                     </div>
 
                     <div class="tab-pane fade" id="organisaties-pane" role="tabpanel">
-                        <div class="text-muted">Nog geen gekoppelde organisaties zichtbaar.</div>
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div class="fw-semibold">Organisaties</div>
+                            <a class="btn btn-sm btn-primary" href="{% url 'organizations:create' %}">
+                                + Organisatie toevoegen
+                            </a>
+                        </div>
+
+                        <div class="text-muted">
+                            Koppelen van organisaties is nog niet gebouwd.
+                        </div>
                     </div>
                 </div>
             </div>
@@ -161,12 +170,12 @@
             <div class="card-body">
                 <ul class="nav nav-tabs compact-tabs mb-3" id="personWorkTabs" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="documenten-tab" data-bs-toggle="tab" data-bs-target="#documenten-pane" type="button" role="tab">
+                        <button class="nav-link active" id="documenten-tab" data-bs-toggle="tab" data-bs-target="#documenten-pane" type="button" role="tab">
                             Documenten
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="meldingen-tab" data-bs-toggle="tab" data-bs-target="#meldingen-pane" type="button" role="tab">
+                        <button class="nav-link" id="meldingen-tab" data-bs-toggle="tab" data-bs-target="#meldingen-pane" type="button" role="tab">
                             Meldingen
                         </button>
                     </li>
@@ -193,7 +202,7 @@
                 </ul>
 
                 <div class="tab-content">
-                    <div class="tab-pane fade" id="documenten-pane" role="tabpanel">
+                    <div class="tab-pane fade show active" id="documenten-pane" role="tabpanel">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div class="fw-semibold">Documenten</div>
                             <a class="btn btn-sm btn-primary" href="{% url 'documents:person_document_create' person.id %}">
@@ -233,7 +242,7 @@
                         </div>
                     </div>
 
-                    <div class="tab-pane fade show active" id="meldingen-pane" role="tabpanel">
+                    <div class="tab-pane fade" id="meldingen-pane" role="tabpanel">
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <div class="fw-semibold">Meldingen</div>
                             <div>
@@ -324,11 +333,216 @@
                     </div>
 
                     <div class="tab-pane fade" id="jobcoaching-pane" role="tabpanel">
-                        <div class="text-muted">Nog geen jobcoachinggegevens beschikbaar.</div>
-                    </div>
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div class="fw-semibold">Jobcoaching</div>
+                            {% if person.person_type == "employee" %}
+                                <a class="btn btn-sm btn-primary" href="{% url 'jobcoaching:create' %}?person={{ person.id }}">
+                                    + Jobcoachingperiode toevoegen
+                                </a>
+                            {% endif %}
+                        </div>
 
+                        {% if person.person_type != "employee" %}
+                            <div class="text-muted">Jobcoaching is alleen beschikbaar voor medewerkers.</div>
+                        {% else %}
+                            <div class="accordion" id="jobcoachingAccordion">
+                                {% for period in person.jobcoaching_periods.all %}
+                                    {% if not period.is_archived %}
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="jobcoaching-heading-{{ period.id }}">
+                                                <button class="accordion-button collapsed" type="button"
+                                                        data-bs-toggle="collapse"
+                                                        data-bs-target="#jobcoaching-collapse-{{ period.id }}"
+                                                        aria-expanded="false"
+                                                        aria-controls="jobcoaching-collapse-{{ period.id }}">
+                                                    <div class="w-100 d-flex justify-content-between align-items-center gap-3 pe-3">
+                                                        <span>
+                                                            <strong>{{ period.status.label }}</strong>
+                                                            {% if period.organization %}
+                                                                <span class="text-muted ms-2">{{ period.organization.name }}</span>
+                                                            {% endif %}
+                                                        </span>
+                                                        <span class="text-muted small">
+                                                            {{ period.start_date|date:"d-m-Y" }}
+                                                            {% if period.end_date %} t/m {{ period.end_date|date:"d-m-Y" }}{% endif %}
+                                                        </span>
+                                                    </div>
+                                                </button>
+                                            </h2>
+
+                                            <div id="jobcoaching-collapse-{{ period.id }}"
+                                                class="accordion-collapse collapse"
+                                                aria-labelledby="jobcoaching-heading-{{ period.id }}"
+                                                data-bs-parent="#jobcoachingAccordion">
+                                                <div class="accordion-body">
+                                                    <div class="row g-3 mb-3">
+                                                        <div class="col-12 col-md-6">
+                                                            <div class="text-muted small">Status</div>
+                                                            <div>{{ period.status.label }}</div>
+                                                        </div>
+                                                        <div class="col-12 col-md-6">
+                                                            <div class="text-muted small">Organisatie</div>
+                                                            <div>{% if period.organization %}{{ period.organization.name }}{% else %}<span class="text-muted">–</span>{% endif %}</div>
+                                                        </div>
+                                                        <div class="col-12 col-md-6">
+                                                            <div class="text-muted small">Startdatum</div>
+                                                            <div>{{ period.start_date|date:"d-m-Y" }}</div>
+                                                        </div>
+                                                        <div class="col-12 col-md-6">
+                                                            <div class="text-muted small">Einddatum</div>
+                                                            <div>{% if period.end_date %}{{ period.end_date|date:"d-m-Y" }}{% else %}<span class="text-muted">–</span>{% endif %}</div>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <div class="text-muted small">Notities</div>
+                                                            <div>
+                                                                {% if period.notes %}
+                                                                    {{ period.notes|linebreaksbr }}
+                                                                {% else %}
+                                                                    <span class="text-muted">–</span>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="d-flex gap-2 flex-wrap">
+                                                        <a href="{% url 'jobcoaching:detail' period.id %}" class="btn btn-sm btn-outline-secondary">
+                                                            Openen
+                                                        </a>
+                                                        <a href="{% url 'jobcoaching:update' period.id %}" class="btn btn-sm btn-outline-primary">
+                                                            Bewerken
+                                                        </a>
+
+                                                        <form method="post" action="{% url 'jobcoaching:archive' period.id %}" class="d-inline">
+                                                            {% csrf_token %}
+                                                            <button class="btn btn-sm btn-outline-warning" type="submit">
+                                                                Archiveren
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% empty %}
+                                    <div class="text-muted">Nog geen jobcoachingperiodes.</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
                     <div class="tab-pane fade" id="loonwaardes-pane" role="tabpanel">
-                        <div class="text-muted">Nog geen loonwaardes beschikbaar.</div>
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div class="fw-semibold">Loonwaardes</div>
+                            {% if person.person_type == "employee" %}
+                                <a class="btn btn-sm btn-primary" href="{% url 'wage_values:create' %}?person={{ person.id }}">
+                                    + Loonwaardeperiode toevoegen
+                                </a>
+                            {% endif %}
+                        </div>
+
+                        {% if person.person_type != "employee" %}
+                            <div class="text-muted">Loonwaardes zijn alleen beschikbaar voor medewerkers.</div>
+                        {% else %}
+                            <div class="accordion" id="wageValueAccordion">
+                                {% for period in person.wage_value_periods.all %}
+                                    {% if not period.is_archived %}
+                                        <div class="accordion-item">
+                                            <h2 class="accordion-header" id="wage-heading-{{ period.id }}">
+                                                <button class="accordion-button collapsed" type="button"
+                                                        data-bs-toggle="collapse"
+                                                        data-bs-target="#wage-collapse-{{ period.id }}"
+                                                        aria-expanded="false"
+                                                        aria-controls="wage-collapse-{{ period.id }}">
+                                                    <div class="w-100 d-flex justify-content-between align-items-center gap-3 pe-3">
+                                                        <span>
+                                                            <strong>{{ period.status.label }}</strong>
+                                                            {% if period.percentage %}
+                                                                <span class="ms-2">{{ period.percentage }}%</span>
+                                                            {% endif %}
+                                                        </span>
+                                                        <span class="text-muted small">
+                                                            {{ period.start_date|date:"d-m-Y" }}
+                                                            {% if period.end_date %} t/m {{ period.end_date|date:"d-m-Y" }}{% endif %}
+                                                        </span>
+                                                    </div>
+                                                </button>
+                                            </h2>
+
+                                            <div id="wage-collapse-{{ period.id }}"
+                                                class="accordion-collapse collapse"
+                                                aria-labelledby="wage-heading-{{ period.id }}"
+                                                data-bs-parent="#wageValueAccordion">
+                                                <div class="accordion-body">
+                                                    <div class="row g-3 mb-3">
+                                                        <div class="col-12 col-md-6">
+                                                            <div class="text-muted small">Status</div>
+                                                            <div>{{ period.status.label }}</div>
+                                                        </div>
+                                                        <div class="col-12 col-md-6">
+                                                            <div class="text-muted small">Beschikkingsstatus</div>
+                                                            <div>{% if period.decision_status %}{{ period.decision_status.label }}{% else %}<span class="text-muted">–</span>{% endif %}</div>
+                                                        </div>
+                                                        <div class="col-12 col-md-6">
+                                                            <div class="text-muted small">Percentage</div>
+                                                            <div>{% if period.percentage %}{{ period.percentage }}%{% else %}<span class="text-muted">–</span>{% endif %}</div>
+                                                        </div>
+                                                        <div class="col-12 col-md-6">
+                                                            <div class="text-muted small">Organisatie</div>
+                                                            <div>{% if period.organization %}{{ period.organization.name }}{% else %}<span class="text-muted">–</span>{% endif %}</div>
+                                                        </div>
+                                                        <div class="col-12 col-md-6">
+                                                            <div class="text-muted small">Gesprek datum</div>
+                                                            <div>{% if period.meeting_date %}{{ period.meeting_date|date:"d-m-Y" }}{% else %}<span class="text-muted">–</span>{% endif %}</div>
+                                                        </div>
+                                                        <div class="col-12 col-md-6">
+                                                            <div class="text-muted small">Locatie gesprek</div>
+                                                            <div>{% if period.meeting_location %}{{ period.meeting_location }}{% else %}<span class="text-muted">–</span>{% endif %}</div>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <div class="text-muted small">Aanwezigen</div>
+                                                            <div>
+                                                                {% if period.meeting_attendees %}
+                                                                    {{ period.meeting_attendees|linebreaksbr }}
+                                                                {% else %}
+                                                                    <span class="text-muted">–</span>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <div class="text-muted small">Notities</div>
+                                                            <div>
+                                                                {% if period.notes %}
+                                                                    {{ period.notes|linebreaksbr }}
+                                                                {% else %}
+                                                                    <span class="text-muted">–</span>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="d-flex gap-2 flex-wrap">
+                                                        <a href="{% url 'wage_values:detail' period.id %}" class="btn btn-sm btn-outline-secondary">
+                                                            Openen
+                                                        </a>
+                                                        <a href="{% url 'wage_values:update' period.id %}" class="btn btn-sm btn-outline-primary">
+                                                            Bewerken
+                                                        </a>
+
+                                                        <form method="post" action="{% url 'wage_values:archive' period.id %}" class="d-inline">
+                                                            {% csrf_token %}
+                                                            <button class="btn btn-sm btn-outline-warning" type="submit">
+                                                                Archiveren
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% empty %}
+                                    <div class="text-muted">Nog geen loonwaardeperiodes.</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
