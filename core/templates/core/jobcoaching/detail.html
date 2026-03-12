@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Jobcoaching{% endblock %}
+{% block page_title %}Jobcoaching - {{ period.person.full_name }}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'jobcoaching:update' period.id %}" class="btn btn-outline-secondary">Bewerken</a>
+
+{% if period.is_archived %}
+    <form method="post" action="{% url 'jobcoaching:restore' period.id %}" class="d-inline">
+        {% csrf_token %}
+        <button class="btn btn-success" type="submit">Herstellen</button>
+    </form>
+{% else %}
+    <form method="post" action="{% url 'jobcoaching:archive' period.id %}" class="d-inline">
+        {% csrf_token %}
+        <button class="btn btn-outline-warning" type="submit">Archiveren</button>
+    </form>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div><strong>Persoon:</strong> {{ period.person.full_name }}</div>
+        <div><strong>Status:</strong> {{ period.status.label }}</div>
+        <div><strong>Startdatum:</strong> {{ period.start_date|date:"d-m-Y" }}</div>
+        <div><strong>Einddatum:</strong> {% if period.end_date %}{{ period.end_date|date:"d-m-Y" }}{% else %}–{% endif %}</div>
+        <div><strong>Organisatie:</strong> {% if period.organization %}{{ period.organization.name }}{% else %}–{% endif %}</div>
+        <div><strong>Notities:</strong></div>
+        <div class="mt-1">{% if period.notes %}{{ period.notes|linebreaksbr }}{% else %}<span class="text-muted">–</span>{% endif %}</div>
+    </div>
+</div>
+{% endblock %}

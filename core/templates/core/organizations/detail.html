@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}{{ organization.name }}{% endblock %}
+{% block page_title %}{{ organization.name }}{% endblock %}
+
+{% block page_actions %}
+<a href="{% url 'organizations:update' organization.id %}" class="btn btn-outline-secondary">Bewerken</a>
+
+{% if organization.is_archived %}
+    <form method="post" action="{% url 'organizations:restore' organization.id %}" class="d-inline">
+        {% csrf_token %}
+        <button class="btn btn-success" type="submit">Herstellen</button>
+    </form>
+{% else %}
+    <form method="post" action="{% url 'organizations:archive' organization.id %}" class="d-inline">
+        {% csrf_token %}
+        <button class="btn btn-outline-warning" type="submit">Archiveren</button>
+    </form>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div><strong>Naam:</strong> {{ organization.name }}</div>
+        <div><strong>Type:</strong> {{ organization.organization_type.label }}</div>
+        <div><strong>Gearchiveerd:</strong> {{ organization.is_archived|yesno:"Ja,Nee" }}</div>
+    </div>
+</div>
+{% endblock %}

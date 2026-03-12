@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{% if mode == "update" %}Organisatie bewerken{% else %}Nieuwe organisatie{% endif %}{% endblock %}
+{% block page_title %}{% if mode == "update" %}Organisatie bewerken{% else %}Nieuwe organisatie{% endif %}{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label">Naam</label>
+                    {{ form.name }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Type</label>
+                    {{ form.organization_type }}
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-3">Opslaan</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

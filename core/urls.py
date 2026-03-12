@@ -23,7 +23,9 @@ urlpatterns = [
     ## SETTINGS
     path("settings/", include("core.settings.urls")),
 
-    
+    path("organizations/", include("core.organizations.urls")),
+    path("jobcoaching/", include("core.jobcoaching.urls")),
+    path("wage-values/", include("core.wage_values.urls")),
 ]
 
 if settings.DEBUG:

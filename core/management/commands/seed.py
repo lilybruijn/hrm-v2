@@ -81,6 +81,24 @@ class Command(BaseCommand):
             ("document_type", "report", "Rapportage", 4),
             ("document_type", "settlement_agreement", "Vaststellingsovereenkomst", 5),
             ("document_type", "other", "Overig", 99),
+            ("organization_type", "municipality", "Gemeente", 1),
+            ("organization_type", "other", "Overig", 99),
+
+            ("jobcoaching_status", "draft", "Concept", 1),
+            ("jobcoaching_status", "requested", "Aangevraagd", 2),
+            ("jobcoaching_status", "active", "Lopend", 3),
+            ("jobcoaching_status", "completed", "Afgerond", 4),
+            ("jobcoaching_status", "rejected", "Afgewezen", 5),
+
+            ("wage_value_status", "preparation", "Voorbereiding", 1),
+            ("wage_value_status", "meeting_planned", "Gesprek gepland", 2),
+            ("wage_value_status", "meeting_done", "Gesprek gehad", 3),
+            ("wage_value_status", "awaiting_decision", "Beschikking afwachten", 4),
+            ("wage_value_status", "completed", "Afgerond", 5),
+
+            ("wage_value_decision_status", "pending", "In afwachting", 1),
+            ("wage_value_decision_status", "received", "Beschikking ontvangen", 2),
+            ("wage_value_decision_status", "rejected", "Afgewezen", 3),
         ]
 
         for category, code, label, sort_order in options:
