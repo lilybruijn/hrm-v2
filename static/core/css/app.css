@@ -105,16 +105,16 @@ a {
     border: 1px solid rgba(105,108,255,.18);
 }
 
-.nav {
+#sidebar .nav {
     padding: 10px 12px;
     overflow: auto;
 }
 
-.nav-section {
+#sidebar .nav-section {
     margin-top: 10px;
 }
 
-.nav-label {
+#sidebar .nav-label {
     font-size: 12px;
     color: var(--muted);
     padding: 10px 10px 6px 10px;
@@ -122,7 +122,7 @@ a {
     letter-spacing: .08em;
 }
 
-.nav-item {
+#sidebar .nav-item {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -132,18 +132,18 @@ a {
     border: 1px solid transparent;
 }
 
-    .nav-item:hover {
-        background: rgba(17,24,39,.03);
-    }
+#sidebar .nav-item:hover {
+    background: rgba(17,24,39,.03);
+}
 
-    .nav-item.active {
-        background: var(--soft);
-        border-color: rgba(105,108,255,.20);
-        color: var(--primary);
-        font-weight: 600;
-    }
+#sidebar .nav-item.active {
+    background: var(--soft);
+    border-color: rgba(105,108,255,.20);
+    color: var(--primary);
+    font-weight: 600;
+}
 
-.nav-ico {
+#sidebar .nav-ico {
     width: 26px;
     height: 26px;
     display: grid;
@@ -152,10 +152,35 @@ a {
     background: rgba(17,24,39,.04);
 }
 
-.nav-item.active .nav-ico {
+#sidebar .nav-item.active .nav-ico {
     background: rgba(105,108,255,.14);
 }
+.nav-tabs.compact-tabs {
+    border-bottom: 1px solid #e9ecef;
+    gap: 0.35rem;
+}
 
+.nav-tabs.compact-tabs .nav-link {
+    border: 1px solid transparent;
+    border-radius: 0.65rem 0.65rem 0 0;
+    padding: 0.45rem 0.8rem;
+    font-size: 0.92rem;
+    font-weight: 500;
+    color: #6c757d;
+    background: transparent;
+}
+
+.nav-tabs.compact-tabs .nav-link:hover {
+    color: #212529;
+    background: #f8f9fa;
+    border-color: transparent;
+}
+
+.nav-tabs.compact-tabs .nav-link.active {
+    color: #212529;
+    background: #fff;
+    border-color: #e9ecef #e9ecef #fff;
+}
 .pill {
     margin-left: auto;
     font-size: 12px;

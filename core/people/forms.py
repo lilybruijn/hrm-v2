@@ -4,19 +4,29 @@ from core.models.people import Person
 class PersonForm(forms.ModelForm):
     class Meta:
         model = Person
-        fields = ["person_type", "first_name", "last_name", "email", "phone"]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        for name, field in self.fields.items():
-            is_select = field.widget.__class__.__name__.lower().find("select") >= 0
-            field.widget.attrs.update({
-                "class": "form-select form-select-sm" if is_select else "form-control form-control-sm",
-                "autocomplete": "off",
-            })
-
-        if "notes" in self.fields:
-            self.fields["notes"].widget = forms.Textarea(
-                attrs={"rows": 3, "class": "form-control form-control-sm"}
-            )
+        fields = [
+            "person_type",
+            "first_name",
+            "last_name",
+            "birth_date",
+            "bsn",
+            "email",
+            "phone",
+            "street",
+            "house_number",
+            "postal_code",
+            "city",
+        ]
+        widgets = {
+            "person_type": forms.Select(attrs={"class": "form-select"}),
+            "first_name": forms.TextInput(attrs={"class": "form-control"}),
+            "last_name": forms.TextInput(attrs={"class": "form-control"}),
+            "birth_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "bsn": forms.TextInput(attrs={"class": "form-control"}),
+            "email": forms.EmailInput(attrs={"class": "form-control"}),
+            "phone": forms.TextInput(attrs={"class": "form-control"}),
+            "street": forms.TextInput(attrs={"class": "form-control"}),
+            "house_number": forms.TextInput(attrs={"class": "form-control"}),
+            "postal_code": forms.TextInput(attrs={"class": "form-control"}),
+            "city": forms.TextInput(attrs={"class": "form-control"}),
+        }

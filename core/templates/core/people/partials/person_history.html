@@ -1,0 +1,95 @@
+<div id="person-history-card">
+    <h5 class="card-title mb-0">Geschiedenis</h5>
+    <div class="text-muted small mt-2">
+        Alleen de 25 meest recente wijzigingen worden getoond.
+    </div>
+
+    <hr class="my-3">
+
+    <div class="accordion" id="historyAccordion">
+        {% for h in history %}
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="h-{{ forloop.counter }}">
+                    <button class="accordion-button collapsed"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#hc-{{ forloop.counter }}"
+                            aria-expanded="false"
+                            aria-controls="hc-{{ forloop.counter }}">
+                        <div class="w-100 d-flex justify-content-between align-items-center gap-3">
+                            <span class="text-truncate">
+                                <strong>{{ h.action_label }}</strong>
+                                <span class="text-muted small ms-2">
+                                    door <strong>{{ h.actor.username|default:"Systeem" }}</strong>
+                                </span>
+                            </span>
+                            <span class="text-muted small">{{ h.created_at|date:"d-m-Y" }}</span>
+                        </div>
+                    </button>
+                </h2>
+
+                <div id="hc-{{ forloop.counter }}"
+                     class="accordion-collapse collapse"
+                     aria-labelledby="h-{{ forloop.counter }}"
+                     data-bs-parent="#historyAccordion">
+                    <div class="accordion-body">
+                        {% if h.changes %}
+                            <div class="list-group list-group-flush small">
+                                {% for field, values in h.changes.items %}
+                                    {% with old=values.0 new=values.1 %}
+                                        <div class="list-group-item px-0 py-2">
+                                            <div class="fw-semibold mb-1">
+                                                {% if field == "person_type" %}Type
+                                                {% elif field == "first_name" %}Voornaam
+                                                {% elif field == "last_name" %}Achternaam
+                                                {% elif field == "birth_date" %}Geboortedatum
+                                                {% elif field == "bsn" %}BSN
+                                                {% elif field == "email" %}Email
+                                                {% elif field == "phone" %}Telefoon
+                                                {% elif field == "street" %}Straat
+                                                {% elif field == "house_number" %}Huisnummer
+                                                {% elif field == "postal_code" %}Postcode
+                                                {% elif field == "city" %}Plaats
+                                                {% elif field == "description" %}Omschrijving
+                                                {% else %}{{ field }}
+                                                {% endif %}
+                                            </div>
+
+                                            <div>
+                                                <span class="text-muted">
+                                                    {% if field == "person_type" %}
+                                                        {% if old == "student" %}Student
+                                                        {% elif old == "employee" %}Medewerker
+                                                        {% else %}–{% endif %}
+                                                    {% else %}
+                                                        {{ old|default:"–" }}
+                                                    {% endif %}
+                                                </span>
+
+                                                <span class="mx-2">→</span>
+
+                                                <span class="text-success fw-semibold">
+                                                    {% if field == "person_type" %}
+                                                        {% if new == "student" %}Student
+                                                        {% elif new == "employee" %}Medewerker
+                                                        {% else %}–{% endif %}
+                                                    {% else %}
+                                                        {{ new|default:"–" }}
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    {% endwith %}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-muted">Geen details.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="text-muted">Geen history.</div>
+        {% endfor %}
+    </div>
+</div>

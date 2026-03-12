@@ -1,0 +1,103 @@
+<div id="person-data-card">
+    <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+        <div>
+            <h6 class="mb-1">Gegevens bewerken</h6>
+            <div class="text-muted small">Werk de standaardgegevens van deze persoon bij</div>
+        </div>
+    </div>
+
+    <hr class="my-3">
+
+    <form
+        hx-post="{% url 'people:data_edit_partial' person.id %}"
+        hx-target="#person-data-card"
+        hx-swap="outerHTML"
+        autocomplete="off">
+
+        {% csrf_token %}
+
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="small text-muted fw-semibold">Persoon</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label class="form-label">Type</label>
+                {{ form.person_type }}
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label class="form-label">Geboortedatum</label>
+                {{ form.birth_date }}
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label class="form-label">Voornaam</label>
+                {{ form.first_name }}
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label class="form-label">Achternaam</label>
+                {{ form.last_name }}
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label class="form-label">BSN</label>
+                {{ form.bsn }}
+            </div>
+
+            <div class="col-12">
+                <hr>
+                <div class="small text-muted fw-semibold">Contact</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label class="form-label">Email</label>
+                {{ form.email }}
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label class="form-label">Telefoon</label>
+                {{ form.phone }}
+            </div>
+
+            <div class="col-12">
+                <hr>
+                <div class="small text-muted fw-semibold">Adres</div>
+            </div>
+
+            <div class="col-12 col-md-8">
+                <label class="form-label">Straat</label>
+                {{ form.street }}
+            </div>
+
+            <div class="col-12 col-md-4">
+                <label class="form-label">Huisnummer</label>
+                {{ form.house_number }}
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label class="form-label">Postcode</label>
+                {{ form.postal_code }}
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label class="form-label">Plaats</label>
+                {{ form.city }}
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-3">
+            <button class="btn btn-primary btn-sm" type="submit">Opslaan</button>
+
+            <button
+                class="btn btn-outline-secondary btn-sm"
+                type="button"
+                hx-get="{% url 'people:data_view_partial' person.id %}"
+                hx-target="#person-data-card"
+                hx-swap="outerHTML">
+                Annuleren
+            </button>
+        </div>
+    </form>
+</div>

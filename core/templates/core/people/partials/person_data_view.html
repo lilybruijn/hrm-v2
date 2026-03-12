@@ -1,0 +1,183 @@
+<div id="person-data-card">
+    <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+        <div>
+            <h6 class="mb-1">Gegevens</h6>
+            <div class="text-muted small">Persoons-, contact- en adresgegevens</div>
+        </div>
+
+        <button
+            class="btn btn-sm btn-outline-secondary"
+            hx-get="{% url 'people:data_edit_partial' person.id %}"
+            hx-target="#person-data-card"
+            hx-swap="outerHTML">
+            Bewerken
+        </button>
+    </div>
+
+    <hr class="my-3">
+
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="small text-muted fw-semibold">Persoon</div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="text-muted small">Type</div>
+            <div>
+                {% if person.person_type == "student" %}
+                    Student
+                {% elif person.person_type == "employee" %}
+                    Medewerker
+                {% else %}
+                    <span class="text-muted">–</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="text-muted small">Geboortedatum</div>
+            <div>
+                {% if person.birth_date %}
+                    {{ person.birth_date|date:"d-m-Y" }}
+                {% else %}
+                    <span class="text-muted">–</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="text-muted small">Voornaam</div>
+            <div>{{ person.first_name|default:"–" }}</div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="text-muted small">Achternaam</div>
+            <div>{{ person.last_name|default:"–" }}</div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="text-muted small">BSN</div>
+            <div>
+                {% if person.bsn %}
+                    {{ person.bsn }}
+                {% else %}
+                    <span class="text-muted">–</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-12">
+            <hr>
+            <div class="small text-muted fw-semibold">Contact</div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="text-muted small">Email</div>
+            <div>
+                {% if person.email %}
+                    {{ person.email }}
+                {% else %}
+                    <span class="text-muted">–</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="text-muted small">Telefoon</div>
+            <div>
+                {% if person.phone %}
+                    {{ person.phone }}
+                {% else %}
+                    <span class="text-muted">–</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-12">
+            <hr>
+            <div class="small text-muted fw-semibold">Adres</div>
+        </div>
+
+        <div class="col-12 col-md-8">
+            <div class="text-muted small">Straat</div>
+            <div>{% if person.street %}{{ person.street }}{% else %}<span class="text-muted">–</span>{% endif %}</div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="text-muted small">Huisnummer</div>
+            <div>{% if person.house_number %}{{ person.house_number }}{% else %}<span class="text-muted">–</span>{% endif %}</div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="text-muted small">Postcode</div>
+            <div>{% if person.postal_code %}{{ person.postal_code }}{% else %}<span class="text-muted">–</span>{% endif %}</div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="text-muted small">Plaats</div>
+            <div>{% if person.city %}{{ person.city }}{% else %}<span class="text-muted">–</span>{% endif %}</div>
+        </div>
+
+        {% if student_profile %}
+            <div class="col-12">
+                <hr>
+                <div class="small text-muted fw-semibold">Studentprofiel</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="text-muted small">Actieve student</div>
+                <div>{{ student_profile.is_active_student|yesno:"Ja,Nee" }}</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="text-muted small">Afgevallen</div>
+                <div>{{ student_profile.has_dropped_out|yesno:"Ja,Nee" }}</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="text-muted small">Uitvaldatum</div>
+                <div>
+                    {% if student_profile.dropout_date %}
+                        {{ student_profile.dropout_date|date:"d-m-Y" }}
+                    {% else %}
+                        <span class="text-muted">–</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="text-muted small">Reden uitval</div>
+                <div>
+                    {% if student_profile.dropout_reason %}
+                        {{ student_profile.dropout_reason|linebreaksbr }}
+                    {% else %}
+                        <span class="text-muted">–</span>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+
+        {% if employee_profile %}
+            <div class="col-12">
+                <hr>
+                <div class="small text-muted fw-semibold">Medewerkerprofiel</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="text-muted small">Actieve medewerker</div>
+                <div>{{ employee_profile.is_active_employee|yesno:"Ja,Nee" }}</div>
+            </div>
+
+            <div class="col-12">
+                <div class="text-muted small">Notities medewerkerprofiel</div>
+                <div>
+                    {% if employee_profile.notes %}
+                        {{ employee_profile.notes|linebreaksbr }}
+                    {% else %}
+                        <span class="text-muted">–</span>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
