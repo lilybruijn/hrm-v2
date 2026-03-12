@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Nieuw document{% endblock %}
+{% block page_title %}Nieuw document{% endblock %}
+
+{% block page_subtitle %}
+<div class="text-muted small">{{ person.full_name }}</div>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="row g-3">
+                <div class="col-12 col-md-6">
+                    <label class="form-label">Sjabloon</label>
+                    {{ form.template }}
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label">Organisatie</label>
+                    {{ form.organization }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Titel</label>
+                    {{ form.title }}
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-3">Aanmaken</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

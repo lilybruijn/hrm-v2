@@ -8,11 +8,15 @@ from .people import Person, StudentProfile, EmployeeProfile
 from .settings import SettingOption
 from .organizations import Organization
 from .contacts import ContactPerson, PersonContact
+from .documents import DocumentTemplate, TemplateVariable, GeneratedDocument
 
 __all__ = [
     "Signal", "Task",
     "Note", "HistoryEvent",
     "Status", "SignalType", "TaskType",
     "Notification",
-    "Person",
+    "Person", "StudentProfile", "EmployeeProfile",
+    "SettingOption", "Organization",
+    "ContactPerson", "PersonContact",
+    "DocumentTemplate", "TemplateVariable", "GeneratedDocument"
 ]

@@ -1,15 +1,21 @@
 {% if messages %}
-<div class="toasts">
-    {% for message in messages %}
-    <div class="toast {% if message.tags %}{{ message.tags }}{% endif %}">
-        <div class="toast-dot"></div>
-        <div class="toast-body">
-            <div class="toast-title">
-                {% if "success" in message.tags %}Gelukt{% elif "error" in message.tags %}Fout{% elif "warning" in message.tags %}Let op{% else %}Info{% endif %}
+    <div class="mb-3">
+        {% for message in messages %}
+            <div class="alert 
+                {% if message.tags == 'error' %}
+                    alert-danger
+                {% elif message.tags == 'warning' %}
+                    alert-warning
+                {% elif message.tags == 'success' %}
+                    alert-success
+                {% else %}
+                    alert-info
+                {% endif %}
+                alert-dismissible fade show"
+                role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Sluiten"></button>
             </div>
-            <div class="toast-text">{{ message }}</div>
-        </div>
+        {% endfor %}
     </div>
-    {% endfor %}
-</div>
 {% endif %}

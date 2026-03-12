@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Document invullen{% endblock %}
+
+{% block page_title %}
+Document invullen
+{% endblock %}
+
+{% block page_subtitle %}
+{{ document.template.name }} – {{ person.full_name }}
+{% endblock %}
+
+{% block content %}
+
+<div class="card shadow-sm">
+<div class="card-body">
+
+<form method="post">
+{% csrf_token %}
+
+<div class="row g-3">
+
+{% for var in variables %}
+
+<div class="col-12">
+
+<label class="form-label">
+{{ var.label }}
+
+{% if var.required %}
+<span class="text-danger">*</span>
+{% endif %}
+
+</label>
+
+{% if var.field_type == "textarea" %}
+
+<textarea class="form-control" name="{{ var.key }}" rows="4" {% if var.required %}required{% endif %}>{{ var.resolved_value }}</textarea>
+
+{% elif var.field_type == "date" %}
+
+<input type="date" class="form-control" name="{{ var.key }}" value="{{ var.resolved_value }}" {% if var.required %}required{% endif %} />
+
+{% elif var.field_type == "number" %}
+
+<input
+type="number"
+class="form-control"
+name="{{ var.key }}"
+value="{{ var.resolved_value }}}"
+{% if var.required %}required{% endif %}
+>
+
+{% elif var.field_type == "boolean" %}
+
+<select class="form-select" name="{{ var.key }}">
+<option value="">--</option>
+<option value="1">Ja</option>
+<option value="0">Nee</option>
+</select>
+
+{% else %}
+
+<input
+type="text"
+class="form-control"
+name="{{ var.key }}"
+value="{{ var.resolved_value }}"
+{% if var.required %}required{% endif %}
+>
+
+{% endif %}
+
+{% if var.help_text %}
+<div class="form-text">{{ var.help_text }}</div>
+{% endif %}
+
+</div>
+
+{% endfor %}
+
+</div>
+
+<button class="btn btn-primary mt-4">
+Document opslaan
+</button>
+
+</form>
+
+</div>
+</div>
+
+{% endblock %}

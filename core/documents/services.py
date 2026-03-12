@@ -1,0 +1,46 @@
+def resolve_variable_value(variable, person=None, organization=None):
+    if variable.source_type == "manual":
+        return variable.default_value or ""
+
+    if variable.source_type == "person" and person:
+        return getattr(person, variable.source_path, "")
+
+    if variable.source_type == "organization" and organization:
+        return getattr(organization, variable.source_path, "")
+
+    if variable.source_type == "student_profile" and hasattr(person, "student_profile"):
+        profile = person.student_profile
+        return getattr(profile, variable.source_path, "")
+
+    if variable.source_type == "employee_profile" and hasattr(person, "employee_profile"):
+        profile = person.employee_profile
+        return getattr(profile, variable.source_path, "")
+
+    return variable.default_value or ""
+
+from io import BytesIO
+from pathlib import Path
+
+from django.core.files.base import ContentFile
+from docxtpl import DocxTemplate
+
+
+def generate_docx_for_document(document):
+    template_path = document.template.template_file.path
+    context = document.rendered_data or {}
+
+    doc = DocxTemplate(template_path)
+    doc.render(context)
+
+    buffer = BytesIO()
+    doc.save(buffer)
+    buffer.seek(0)
+
+    safe_title = "".join(c for c in document.title if c.isalnum() or c in (" ", "-", "_")).strip()
+    safe_title = safe_title.replace(" ", "_") or f"document_{document.pk}"
+
+    filename = f"{safe_title}.docx"
+
+    document.file.save(filename, ContentFile(buffer.read()), save=False)
+    document.status = "generated"
+    document.save(update_fields=["file", "status"])

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Sjabloon{% endblock %}
+{% block page_title %}Nieuw documentsjabloon{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="row g-3">
+                <div class="col-12 col-md-6">
+                    <label class="form-label">Naam</label>
+                    {{ form.name }}
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label">Documenttype</label>
+                    {{ form.document_type }}
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label">Doelgroep</label>
+                    {{ form.target_type }}
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label">Outputformaat</label>
+                    {{ form.output_format }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Templatebestand</label>
+                    {{ form.template_file }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Omschrijving</label>
+                    {{ form.description }}
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        {{ form.is_active }}
+                        <label class="form-check-label">Actief</label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-3">Opslaan</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

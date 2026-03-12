@@ -75,6 +75,12 @@ class Command(BaseCommand):
             ("person_contact_relation_type", "employer_contact", "Werkgever contactpersoon", 4),
             ("person_contact_relation_type", "parent_guardian", "Ouder / verzorger", 5),
             ("person_contact_relation_type", "other", "Overig", 99),
+            ("document_type", "employment_contract", "Arbeidsovereenkomst", 1),
+            ("document_type", "jobcoach_request", "Jobcoachaanvraag", 2),
+            ("document_type", "wage_value", "Loonwaardeformulier", 3),
+            ("document_type", "report", "Rapportage", 4),
+            ("document_type", "settlement_agreement", "Vaststellingsovereenkomst", 5),
+            ("document_type", "other", "Overig", 99),
         ]
 
         for category, code, label, sort_order in options:
