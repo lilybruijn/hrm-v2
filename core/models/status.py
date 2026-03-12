@@ -3,8 +3,8 @@ from django.db import models
 
 class Status(models.Model):
     SCOPE_CHOICES = (
-        ("signal", "Signal"),
-        ("task", "Task"),
+        ("signal", "Melding"),
+        ("task", "Taak"),
     )
 
     key = models.SlugField(max_length=50)
