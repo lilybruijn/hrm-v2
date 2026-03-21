@@ -1,29 +1,37 @@
 from django.conf import settings
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.utils import timezone
+
 
 class Notification(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications")
+    TYPE_INFO = "info"
+    TYPE_SUCCESS = "success"
+    TYPE_WARNING = "warning"
+    TYPE_ERROR = "error"
 
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey("content_type", "object_id")
+    TYPE_CHOICES = [
+        (TYPE_INFO, "Info"),
+        (TYPE_SUCCESS, "Success"),
+        (TYPE_WARNING, "Warning"),
+        (TYPE_ERROR, "Error"),
+    ]
 
-    title = models.CharField(max_length=160)
-    body = models.TextField(blank=True)
-    url = models.CharField(max_length=255, blank=True)
-
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+    )
+    title = models.CharField(max_length=255)
+    message = models.TextField(blank=True)
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES, default=TYPE_INFO)
+    url = models.CharField(max_length=500, blank=True)
     is_read = models.BooleanField(default=False)
-    read_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    read_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        ordering = ["is_read", "-created_at"]
+        ordering = ["-created_at"]
+        verbose_name = "notification"
+        verbose_name_plural = "notifications"
 
-    def mark_read(self):
-        if not self.is_read:
-            self.is_read = True
-            self.read_at = timezone.now()
-            self.save(update_fields=["is_read", "read_at"])
+    def __str__(self):
+        return f"{self.user} - {self.title}"

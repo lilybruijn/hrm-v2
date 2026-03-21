@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Contactpersoon{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="h3 mb-1">{{ contact.full_name }}</h1>
+            <div class="text-muted small">{{ contact.job_title|default:"Contactpersoon" }}</div>
+        </div>
+
+        <a href="{% url 'contacts:update' contact.id %}" class="btn btn-outline-primary">
+            Bewerken
+        </a>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">E-mail</dt>
+                <dd class="col-sm-9">{{ contact.email|default:"-" }}</dd>
+
+                <dt class="col-sm-3">Telefoon</dt>
+                <dd class="col-sm-9">{{ contact.phone|default:"-" }}</dd>
+
+                <dt class="col-sm-3">Functie</dt>
+                <dd class="col-sm-9">{{ contact.job_title|default:"-" }}</dd>
+
+                <dt class="col-sm-3">Organisatie</dt>
+                <dd class="col-sm-9">
+                    {% if contact.organization %}
+                        {{ contact.organization.name }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </dd>
+
+                <dt class="col-sm-3">Notities</dt>
+                <dd class="col-sm-9">
+                    {{ contact.notes|linebreaksbr|default:"-" }}
+                </dd>
+
+                <dt class="col-sm-3">Status</dt>
+                <dd class="col-sm-9">
+                    {% if contact.is_active %}
+                        <span class="badge bg-success">Actief</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Inactief</span>
+                    {% endif %}
+                </dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="mb-3">Gekoppelde personen</h5>
+
+            {% if contact.linked_people.all %}
+                <div class="list-group list-group-flush">
+                    {% for relation in contact.linked_people.all %}
+                        <div class="list-group-item px-0">
+                            <div class="fw-semibold">
+                                <a href="{% url 'people:detail' relation.person.id %}">
+                                    {{ relation.person.full_name }}
+                                </a>
+
+                                {% if relation.is_primary %}
+                                    <span class="badge bg-primary-subtle text-primary ms-2">Primair</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="text-muted small">
+                                {% if relation.relation_type %}
+                                    {{ relation.relation_type.label }}
+                                {% else %}
+                                    –
+                                {% endif %}
+                            </div>
+
+                            {% if relation.notes %}
+                                <div class="small mt-1">{{ relation.notes }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-muted">Geen gekoppelde personen.</div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Notificaties</h1>
+
+    {% if notifications %}
+        <div class="mb-3">
+            <form method="post" action="{% url 'notifications:mark_all_read' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">
+                Markeer alles als gelezen
+            </button>
+        </form>
+        </div>
+    {% endif %}
+</div>
+
+{% if notifications %}
+    <div class="card-list">
+        {% for notification in notifications %}
+            <div class="card mb-3 {% if not notification.is_read %}border-primary{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h5 class="mb-1">{{ notification.title }}</h5>
+                            <small class="text-muted">{{ notification.created_at|date:"d-m-Y H:i" }}</small>
+                        </div>
+
+                        {% if not notification.is_read %}
+                            <span class="badge bg-primary">Nieuw</span>
+                        {% endif %}
+                    </div>
+
+                    {% if notification.message %}
+                        <p class="mb-3">{{ notification.message }}</p>
+                    {% endif %}
+
+                    <div class="d-flex gap-2">
+                        {% if notification.url %}
+                            <form method="post" action="{% url 'notifications:mark_read' notification.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-primary">
+                                    Openen
+                                </button>
+                            </form>
+                        {% elif not notification.is_read %}
+                            <form method="post" action="{% url 'notifications:mark_read' notification.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-primary">
+                                    Markeer als gelezen
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card">
+        <div class="card-body">
+            <p class="mb-0">Je hebt nog geen notificaties.</p>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

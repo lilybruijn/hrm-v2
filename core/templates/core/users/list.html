@@ -2,29 +2,98 @@
 {% block title %}Gebruikers{% endblock %}
 
 {% block content %}
-<h1>Gebruikers</h1>
+<div class="page">
+    <div class="page-header row">
+        <div class="col-md-8 mb-3">
+            <h1>Gebruikers</h1>
+            <p class="muted mb-0">Overzicht van gebruikers</p>
+        </div>
+        <div class="col-md-4 mb-3 text-md-end">
+            <a href="{% url 'users:create' %}" class="btn btn-primary">
+                + Gebruiker aanmaken
+            </a>
+        </div>
+    </div>
 
-<table>
-    <thead>
-        <tr>
-            <th>Username</th>
-            <th>Email</th>
-            <th>Actie</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for user in users %}
-            <tr>
-                <td>{{ user.username }}</td>
-                <td>{{ user.email }}</td>
-                <td>
-                    <<form method="post" action="{% url 'impersonation:start' user.id %}">
-                        {% csrf_token %}
-                        <button type="submit">Bekijk als</button>
-                    </form>
-                </td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <div class="card p-3">
+        <div class="table-responsive">
+            <table class="table table-sm align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Gebruikersnaam</th>
+                        <th>E-mailadres</th>
+                        <th>Status</th>
+                        <th>Groep</th>
+                        <th class="text-end">Acties</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for user in users %}
+                        <tr class="{% if not user.is_active %}text-muted{% endif %}">
+                            <td>
+                                {{ user.username }}
+                                {% if user.is_superuser %}
+                                    <span class="badge bg-dark ms-1">Superuser</span>
+                                {% elif user.is_staff %}
+                                    <span class="badge bg-secondary ms-1">Staff</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.email|default:"-" }}</td>
+                            <td>
+                                {% if user.is_active %}
+                                    <span class="badge bg-success">Actief</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactief</span>
+                                {% endif %}
+                            </td><td>
+                                {% with group=user.groups.first %}
+                                    {% if group %}
+                                        <span class="badge bg-light text-dark border">{{ group.name }}</span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                {% endwith %}
+                            </td>
+                            <td class="text-end">
+                                <div class="d-flex gap-2 justify-content-end flex-wrap">
+                                    <a href="{% url 'users:update' user.id %}" class="btn btn-outline-primary btn-sm">
+                                        Bewerken
+                                    </a>
+
+                                    <form method="post" action="{% url 'impersonation:start' user.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-info btn-sm">
+                                            Bekijk als gebruiker
+                                        </button>
+                                    </form>
+
+                                    <form method="post" action="{% url 'users:toggle_active' user.id %}">
+                                        {% csrf_token %}
+                                        {% if user.is_active %}
+                                            <button type="submit" class="btn btn-outline-warning btn-sm">
+                                                Deactiveren
+                                            </button>
+                                        {% else %}
+                                            <button type="submit" class="btn btn-outline-success btn-sm">
+                                                Activeren
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">
+                                Geen gebruikers gevonden.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
 {% endblock %}

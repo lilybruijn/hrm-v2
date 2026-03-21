@@ -30,6 +30,10 @@ urlpatterns = [
     path("impersonation/", include("core.impersonation.urls")),
     
     path("users/", include("core.users.urls")),
+
+    path("notifications/", include("core.notifications.urls")),
+
+    path("contacts/", include("core.contacts.urls")),
 ]
 
 if settings.DEBUG:

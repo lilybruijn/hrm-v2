@@ -18,4 +18,5 @@ urlpatterns = [
     path("<int:pk>/body/", views.signal_update_body, name="update_body"),
     path("<int:pk>/restore/", views.signal_restore, name="restore"),
     path("<int:pk>/delete/", views.signal_delete, name="delete"),
+    path("mine/", views.my_signals, name="my_list"),
 ]

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Contactpersonen{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="h3 mb-1">Contactpersonen</h1>
+            <div class="text-muted small">Overzicht van contactpersonen</div>
+        </div>
+
+        <a href="{% url 'contacts:create' %}" class="btn btn-primary">
+            + Contactpersoon aanmaken
+        </a>
+    </div>
+
+    <div class="card p-3">
+        <div class="table-responsive">
+            <table class="table table-sm align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Naam</th>
+                        <th>E-mail</th>
+                        <th>Telefoon</th>
+                        <th>Functie</th>
+                        <th>Organisatie</th>
+                        <th>Status</th>
+                        <th class="text-end">Acties</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contact in contacts %}
+                        <tr class="{% if not contact.is_active %}text-muted{% endif %}">
+                            <td>
+                                <a href="{% url 'contacts:detail' contact.id %}">
+                                    {{ contact.full_name }}
+                                </a>
+                            </td>
+                            <td>{{ contact.email|default:"-" }}</td>
+                            <td>{{ contact.phone|default:"-" }}</td>
+                            <td>{{ contact.job_title|default:"-" }}</td>
+                            <td>
+                                {% if contact.organization %}
+                                    {{ contact.organization.name }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if contact.is_active %}
+                                    <span class="badge bg-success">Actief</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactief</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'contacts:update' contact.id %}" class="btn btn-sm btn-outline-primary">
+                                    Bewerken
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                Geen contactpersonen gevonden.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Mijn taken{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+        <div>
+            <h1 class="h3 mb-1">Mijn taken</h1>
+            <div class="text-muted small">
+                Taken die aan jou zijn toegewezen
+            </div>
+        </div>
+
+        <div>
+            <a href="{% url 'tasks:create' %}?assigned_to={{ request.user.id }}" class="btn btn-primary">
+                + Taak aanmaken
+            </a>
+        </div>
+    </div>
+
+    <form method="get" class="card shadow-sm mb-4" autocomplete="new-password">
+        <div class="card-body">
+            <div class="row g-2">
+                <div class="col-12 col-md-6 col-xl-3">
+                    <label class="form-label small">Zoeken</label>
+                    <input
+                        type="text"
+                        name="q"
+                        value="{{ task_q }}"
+                        class="form-control form-control-sm"
+                        placeholder="Zoek in omschrijving..."
+                    >
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-2">
+                    <label class="form-label small">Status</label>
+                    <select name="status" class="form-select form-select-sm">
+                        <option value="">Alle statussen</option>
+                        {% for s in statuses %}
+                            <option value="{{ s.id }}" {% if status_id == s.id|stringformat:"s" %}selected{% endif %}>
+                                {{ s.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-2">
+                    <label class="form-label small">Type</label>
+                    <select name="type" class="form-select form-select-sm">
+                        <option value="">Alle types</option>
+                        {% for t in types %}
+                            <option value="{{ t.id }}" {% if type_id == t.id|stringformat:"s" %}selected{% endif %}>
+                                {{ t.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-2">
+                    <label class="form-label small">Persoon</label>
+                    <select name="person" class="form-select form-select-sm">
+                        <option value="">Alle personen</option>
+                        {% for p in people %}
+                            <option value="{{ p.id }}" {% if person_id == p.id|stringformat:"s" %}selected{% endif %}>
+                                {{ p.first_name }} {{ p.last_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-6 col-xl-3">
+                    <label class="form-label small">Melding</label>
+                    <select name="signal" class="form-select form-select-sm">
+                        <option value="">Alle meldingen</option>
+                        {% for s in signals %}
+                            <option value="{{ s.id }}" {% if signal_id == s.id|stringformat:"s" %}selected{% endif %}>
+                                #{{ s.id }}{% if s.name %} - {{ s.name }}{% elif s.type %} - {{ s.type.name }}{% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                        </div>
+            <div class="col-12 col-md-6 col-xl-2 d-flex align-items-end">
+                <div class="form-check mb-1">
+                    <input type="hidden" name="hide_completed" value="0">
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        name="hide_completed"
+                        value="1"
+                        id="hide_completed"
+                        {% if hide_completed %}checked{% endif %}
+                    >
+                    <label class="form-check-label small" for="hide_completed">
+                        Verberg afgerond
+                    </label>
+                </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+                <a href="{% url 'tasks:my_list' %}" class="btn btn-sm btn-outline-secondary">Reset</a>
+            </div>
+        </div>
+    </form>
+
+    {% now "Y-m-d" as today_str %}
+
+    {% if tasks %}
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for task in tasks %}
+                        <a href="{% url 'tasks:detail' task.pk %}"
+                           class="list-group-item list-group-item-action px-3 py-3
+                                {% if task.status.name == 'Afgerond' %}
+                                    border-start border-4 border-success opacity-75
+                                {% elif task.urgency == 'overdue' %}
+                                    border-start border-4 border-danger
+                                {% elif task.urgency == 'today' %}
+                                    border-start border-4 border-warning
+                                {% elif task.urgency == 'soon' %}
+                                    border-start border-4 border-info
+                                {% endif %}
+                                {% if task.urgency == 'later' %}opacity-75{% endif %}
+                                ">
+                            <div class="d-flex justify-content-between align-items-start gap-3">
+                                <div class="flex-grow-1 min-w-0">
+                                {% if task.parent_task %}
+                                    <div class="text-muted small">
+                                        Hoort bij taak #{{ task.parent_task.id }}
+                                    </div>
+                                {% endif %}
+                                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                                        <span class="fw-semibold">
+                                            Taak #{{ task.id }}
+                                        </span>
+
+                                        {% if task.status %}
+                                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                                {{ task.status.name }}
+                                            </span>
+                                        {% endif %}
+
+                                        {% if task.type %}
+                                            <span class="badge bg-light text-dark border">
+                                                {{ task.type.name }}
+                                            </span>
+                                        {% endif %}
+
+                                        {% if task.is_archived %}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                                Gearchiveerd
+                                            </span>
+                                        {% endif %}
+
+                                        {% if task.urgency == "overdue" %}
+                                            <span class="badge bg-danger">Te laat</span>
+                                        {% elif task.urgency == "today" %}
+                                            <span class="badge bg-warning text-dark">Vandaag</span>
+                                        {% elif task.urgency == "soon" %}
+                                            <span class="badge bg-info text-dark">Binnenkort</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="text-muted small mb-2">
+                                        {% if task.due_at %}
+                                            <span class="{% with due_str=task.due_at|date:'Y-m-d' %}{% if due_str < today_str %}text-danger fw-semibold{% endif %}{% endwith %}">
+                                                Deadline: {{ task.due_at|date:"d-m-Y" }}
+                                            </span>
+                                        {% else %}
+                                            Geen deadline
+                                        {% endif %}
+
+                                        {% if task.signal %}
+                                            <span class="mx-1">•</span>
+                                            Melding #{{ task.signal.id }}
+                                        {% endif %}
+
+                                        {% if task.assigned_by %}
+                                            <span class="mx-1">•</span>
+                                            Toegewezen door <strong>{{ task.assigned_by.username }}</strong>
+                                        {% endif %}
+                                    </div>
+
+                                    {% if task.body %}
+                                        <div class="text-body small mb-2">
+                                            {{ task.body|truncatechars:160 }}
+                                        </div>
+                                    {% endif %}
+
+                                    {% with persons=task.people.all %}
+                                        {% if persons %}
+                                            <div class="text-muted small">
+                                                <strong>Personen:</strong>
+                                                {% for p in persons %}
+                                                    {{ p.first_name }} {{ p.last_name }}{% if not forloop.last %}, {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    {% endwith %}
+                                </div>
+
+                                <div class="text-end text-muted small flex-shrink-0">
+                                    Bekijken →
+                                </div>
+                            </div>
+
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="card shadow-sm">
+            <div class="card-body py-4">
+                <h2 class="h6 mb-2">Geen taken</h2>
+                <p class="text-muted mb-0">
+                    Er zijn geen taken die voldoen aan je filters.
+                </p>
+            </div>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

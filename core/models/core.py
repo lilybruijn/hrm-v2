@@ -9,6 +9,10 @@ from .types import SignalType, TaskType
 from .notes import Note
 from .people import Person
 from .history import HistoryEvent  # zie hieronder
+from .settings import SettingOption
+from .people import Person, StudentProfile, EmployeeProfile
+from .organizations import Organization
+from .contacts import ContactPerson, PersonContact
 
 # -------------------------
 # Core entities
@@ -30,6 +34,14 @@ class Signal(TimeStampedModel):
         related_name="assigned_signals",
         help_text="Leeg = zichtbaar voor alle users (default)."
     )
+    assigned_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_signal_assignments",
+    )
+    
     name = models.CharField(max_length=200, blank=True)
 
     active_from = models.DateField(default=timezone.localdate)
@@ -45,6 +57,14 @@ class Signal(TimeStampedModel):
 
 
 class Task(TimeStampedModel):
+    parent_task = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="child_tasks",
+    )
+        
     type = models.ForeignKey(TaskType, on_delete=models.PROTECT, related_name="tasks")
 
     people = models.ManyToManyField(
@@ -63,6 +83,13 @@ class Task(TimeStampedModel):
 
     assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="tasks")
 
+    assigned_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_task_assignments",
+    )
     due_at = models.DateField(default=timezone.localdate)
     status = models.ForeignKey(Status, on_delete=models.PROTECT, null=True, blank=True, related_name="tasks")
     notes = GenericRelation(Note, related_query_name="tasks")

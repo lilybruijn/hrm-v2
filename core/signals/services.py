@@ -19,35 +19,21 @@ def log_history(obj, actor, action: str, changes: dict | None = None):
     )
 
 
-@transaction.atomic
-def create_signal_notifications(signal: Signal, created_by):
-    """
-    Regels:
-    - assigned_to gezet -> notificatie alleen voor die user
-    - assigned_to leeg -> notificatie voor alle staff users
-    """
-    title = "Nieuwe melding"
-    body = (signal.body or "")[:4000]
-    url = f"/signals/{signal.id}/"
+def create_signal_notifications(signal, actor, reassigned=False):
+    if not signal.assigned_to:
+        return None
 
-    if signal.assigned_to_id:
-        Notification.objects.create(
-            user=signal.assigned_to,
-            content_object=signal,
-            title=title,
-            body=body,
-            url=url,
-        )
-        return
+    if reassigned:
+        title = "Melding aan jou toegewezen"
+        message = f"{actor.username} heeft de melding '{signal.name}' aan je toegewezen."
+    else:
+        title = "Nieuwe melding toegewezen"
+        message = f"{actor.username} heeft een nieuwe melding aan je toegewezen: '{signal.name}'."
 
-    staff_users = User.objects.filter(is_staff=True, is_active=True).exclude(id=getattr(created_by, "id", None))
-    Notification.objects.bulk_create([
-        Notification(
-            user=u,
-            content_object=signal,
-            title=title,
-            body=body,
-            url=url,
-        )
-        for u in staff_users
-    ])
+    return Notification.objects.create(
+        user=signal.assigned_to,
+        title=title,
+        message=message,
+        type="warning",
+        url=f"/signals/{signal.pk}/",
+    )
