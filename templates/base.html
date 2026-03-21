@@ -28,6 +28,17 @@
         <div class="main">
             {% include "core/partials/_navbar.html" %}
 
+            {% if request.is_impersonating %}
+                <div class="alert alert-warning border border-yellow-300 text-yellow-900 px-4 py-3 rounded mb-4">
+                    Je bekijkt nu als <strong>{{ request.user.username }}</strong>
+
+                    <form method="post" action="{% url 'impersonation:stop' %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Stop</button>
+                    </form>
+                </div>
+            {% endif %}
+
             <main class="content">
                 <div class="container">
                     {% include "core/partials/_messages.html" %}
@@ -47,12 +58,6 @@
                 </div>
             </main>
 
-            <footer class="footer">
-                <div class="container footer-inner">
-                    <span class="muted">HRM v2</span>
-                    <span class="muted">© {{ now|default:"" }}</span>
-                </div>
-            </footer>
         </div>
     </div>
 

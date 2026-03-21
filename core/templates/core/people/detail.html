@@ -335,15 +335,15 @@
                     <div class="tab-pane fade" id="jobcoaching-pane" role="tabpanel">
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <div class="fw-semibold">Jobcoaching</div>
-                            {% if person.person_type == "employee" %}
+                            {% if perms.core.add_jobcoaching %}
                                 <a class="btn btn-sm btn-primary" href="{% url 'jobcoaching:create' %}?person={{ person.id }}">
                                     + Jobcoachingperiode toevoegen
                                 </a>
                             {% endif %}
                         </div>
 
-                        {% if person.person_type != "employee" %}
-                            <div class="text-muted">Jobcoaching is alleen beschikbaar voor medewerkers.</div>
+                         {% if perms.core.view_jobcoaching %}
+                            <div class="text-muted">Je hebt geen rechten om dit onderdeel te bekijken.</div>
                         {% else %}
                             <div class="accordion" id="jobcoachingAccordion">
                                 {% for period in person.jobcoaching_periods.all %}
@@ -403,7 +403,7 @@
                                                             </div>
                                                         </div>
                                                     </div>
-
+                                                    {% if perms.core.change_jobcoaching %}
                                                     <div class="d-flex gap-2 flex-wrap">
                                                         <a href="{% url 'jobcoaching:detail' period.id %}" class="btn btn-sm btn-outline-secondary">
                                                             Openen
@@ -419,6 +419,7 @@
                                                             </button>
                                                         </form>
                                                     </div>
+                                                    {% endif %}
                                                 </div>
                                             </div>
                                         </div>
