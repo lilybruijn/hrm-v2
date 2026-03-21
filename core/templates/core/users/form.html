@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if mode == "create" %}Gebruiker aanmaken{% else %}Gebruiker bewerken{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-header mb-3">
+        <h1>
+            {% if mode == "create" %}
+                Gebruiker aanmaken
+            {% else %}
+                Gebruiker bewerken
+            {% endif %}
+        </h1>
+    </div>
+
+    <div class="card p-4">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label">Gebruikersnaam</label>
+                {{ form.username }}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">E-mailadres</label>
+                {{ form.email }}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">
+                    {% if mode == "create" %}Wachtwoord{% else %}Nieuw wachtwoord{% endif %}
+                </label>
+                {{ form.password }}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Groep</label>
+                {{ form.group }}
+            </div>
+
+            <div class="form-check mb-2">
+                {{ form.is_active }}
+                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                    Actief
+                </label>
+            </div>
+
+            <div class="form-check mb-2">
+                {{ form.is_staff }}
+                <label class="form-check-label" for="{{ form.is_staff.id_for_label }}">
+                    Staff
+                </label>
+            </div>
+
+            <div class="form-check mb-3">
+                {{ form.is_superuser }}
+                <label class="form-check-label" for="{{ form.is_superuser.id_for_label }}">
+                    Superuser
+                </label>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    Opslaan
+                </button>
+                <a href="{% url 'users:list' %}" class="btn btn-outline-secondary">
+                    Annuleren
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

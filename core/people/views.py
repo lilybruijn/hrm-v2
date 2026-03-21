@@ -103,7 +103,11 @@ def person_detail(request, pk: int):
         .filter(content_type=person_ct, object_id=person.pk)
         .order_by("-created_at")
     )
-
+    contact_links = person.person_contacts.select_related(
+        "contact_person",
+        "relation_type",
+        "contact_person__organization",
+    )
     history = get_person_history(person)
 
     ACTION_LABELS = {
@@ -133,10 +137,6 @@ def person_detail(request, pk: int):
     student_profile = getattr(person, "student_profile", None)
     employee_profile = getattr(person, "employee_profile", None)
 
-    contacts = person.person_contacts.select_related(
-        "contact_person",
-        "relation_type"
-    )
 
     return render(request, "core/people/detail.html", {
         "person": person,
@@ -148,7 +148,8 @@ def person_detail(request, pk: int):
         "active_nav": "people",
         "student_profile": student_profile,
         "employee_profile": employee_profile,
-        "contacts": contacts,
+      
+        "contact_links": contact_links,
     })
 
 

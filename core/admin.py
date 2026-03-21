@@ -54,12 +54,17 @@ class TaskTypeAdmin(admin.ModelAdmin):
 
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "title", "is_read", "created_at")
-    list_filter = ("is_read",)
-    search_fields = ("title", "body")
+    list_display = ("title", "user", "type", "is_read", "created_at")
+    list_filter = ("type", "is_read", "created_at")
+    search_fields = ("title", "message", "user__username", "user__email")
 
 @admin.register(Person)
 class PersonAdmin(admin.ModelAdmin):
     list_display = ("id", "person_type", "last_name", "first_name", "email", "phone", "created_at")
     list_filter = ("person_type",)
     search_fields = ("first_name", "last_name", "email", "phone")
+
+from django.contrib import admin
+from core.models import Notification
+
+

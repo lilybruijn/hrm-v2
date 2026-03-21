@@ -1,22 +1,39 @@
 from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
-
+from datetime import timedelta
+from django.utils import timezone
 from core.auth import staff_required
 from core.models import Task, Note, Status, TaskType, Signal
 from core.models.people import Person
-from .forms import TaskForm, TaskCreateForm
 from core.signals.services import log_history
-
+from .forms import TaskForm, TaskCreateForm
+from .services import create_task_notifications, create_admin_review_task_for_completed_task
 User = get_user_model()
+
+ACTION_LABELS = {
+    "created": "Taak aangemaakt",
+    "updated": "Taak bijgewerkt",
+    "status_changed": "Status gewijzigd",
+    "type_changed": "Type gewijzigd",
+    "reassigned": "Toewijzing gewijzigd",
+    "archived_toggled": "Archiefstatus gewijzigd",
+    "note_added": "Notitie toegevoegd",
+}
+
 
 @staff_required
 def task_list(request):
-    qs = Task.objects.select_related("type", "status", "assigned_to", "signal").prefetch_related("people")
+    qs = (
+        Task.objects
+        .select_related("type", "status", "assigned_to", "assigned_by", "signal")
+        .prefetch_related("people")
+    )
 
     task_q = (request.GET.get("task_q") or "").strip()
     status_id = (request.GET.get("task_status") or "").strip()
@@ -63,6 +80,7 @@ def task_list(request):
 
     sort = (request.GET.get("sort") or "due_at").strip()
     dir_ = (request.GET.get("dir") or "asc").strip().lower()
+
     if dir_ not in ("asc", "desc"):
         dir_ = "asc"
 
@@ -105,20 +123,34 @@ def task_list(request):
         "active_nav": "tasks",
     })
 
+
 @staff_required
 @transaction.atomic
 def task_create(request):
     people_param = (request.GET.get("people") or "").strip()
     signal_id = (request.GET.get("signal") or "").strip()
     signal = None
-
+    assigned_to_id = (request.GET.get("assigned_to") or "").strip()
     if signal_id.isdigit():
         signal = Signal.objects.prefetch_related("people").filter(pk=int(signal_id)).first()
 
     if request.method == "POST":
         form = TaskCreateForm(request.POST)
         if form.is_valid():
-            task = form.save()           
+            task = form.save(commit=False)
+
+            if task.assigned_to:
+                task.assigned_by = request.user
+
+            task.save()
+            form.save_m2m()
+
+            log_history(task, request.user, "created", {})
+
+            if task.assigned_to:
+                create_task_notifications(task, request.user)
+
+            messages.success(request, "Taak aangemaakt.")
             return redirect("tasks:detail", pk=task.id)
     else:
         initial = {}
@@ -128,6 +160,8 @@ def task_create(request):
         if people_param:
             ids = [int(x) for x in people_param.split(",") if x.strip().isdigit()]
             initial["people"] = ids
+        if assigned_to_id.isdigit():
+            initial["assigned_to"] = int(assigned_to_id)
         form = TaskCreateForm(initial=initial)
 
     return render(request, "core/tasks/form.html", {
@@ -136,11 +170,14 @@ def task_create(request):
         "active_nav": "tasks",
     })
 
+
 @staff_required
 def task_detail(request, pk: int):
     task = get_object_or_404(
-        Task.objects.select_related("type", "status", "assigned_to", "signal").prefetch_related("people"),
-        pk=pk
+        Task.objects.select_related(
+            "type", "status", "assigned_to", "assigned_by", "signal", "parent_task"
+        ).prefetch_related("people", "child_tasks"),
+        pk=pk,
     )
     form = TaskForm(instance=task)
 
@@ -152,16 +189,6 @@ def task_detail(request, pk: int):
     user_map = {u.id: u.username for u in User.objects.all()}
     person_map = {p.id: f"{p.first_name} {p.last_name}" for p in Person.objects.all()}
     signal_map = {s.id: f"Melding #{s.id} - {s.type.name}" for s in Signal.objects.select_related("type")}
-
-    ACTION_LABELS = {
-        "created": "Taak aangemaakt",
-        "updated": "Taak bijgewerkt",
-        "status_changed": "Status gewijzigd",
-        "type_changed": "Type gewijzigd",
-        "reassigned": "Toewijzing gewijzigd",
-        "archived_toggled": "Archiefstatus gewijzigd",
-        "note_added": "Notitie toegevoegd",
-    }
 
     for h in history:
         h.action_label = ACTION_LABELS.get(h.action, h.action.replace("_", " ").capitalize())
@@ -184,12 +211,16 @@ def task_detail(request, pk: int):
 @transaction.atomic
 def task_update(request, pk: int):
     task = get_object_or_404(
-        Task.objects.select_related("type", "status", "assigned_to", "signal").prefetch_related("people"),
-        pk=pk
+        Task.objects
+        .select_related("type", "status", "assigned_to", "assigned_by", "signal")
+        .prefetch_related("people"),
+        pk=pk,
     )
 
     if request.method != "POST":
         return redirect("tasks:detail", pk=task.pk)
+
+    old_assigned_to_id = task.assigned_to_id
 
     before = {
         "type_id": task.type_id,
@@ -203,7 +234,6 @@ def task_update(request, pk: int):
     before_people = list(task.people.values_list("id", flat=True))
 
     data = request.POST.copy()
-
     expected_fields = ["type", "assigned_to", "signal", "due_at", "status", "body"]
 
     for f in expected_fields:
@@ -216,6 +246,7 @@ def task_update(request, pk: int):
                 data[f] = task.body or ""
 
     form = TaskForm(data, instance=task)
+
     if not form.is_valid():
         messages.error(request, "Formulier is niet geldig.")
 
@@ -227,16 +258,6 @@ def task_update(request, pk: int):
         user_map = {u.id: u.username for u in User.objects.all()}
         person_map = {p.id: f"{p.first_name} {p.last_name}" for p in Person.objects.all()}
         signal_map = {s.id: f"Melding #{s.id} - {s.type.name}" for s in Signal.objects.select_related("type")}
-
-        ACTION_LABELS = {
-            "created": "Taak aangemaakt",
-            "updated": "Taak bijgewerkt",
-            "status_changed": "Status gewijzigd",
-            "type_changed": "Type gewijzigd",
-            "reassigned": "Toewijzing gewijzigd",
-            "archived_toggled": "Archiefstatus gewijzigd",
-            "note_added": "Notitie toegevoegd",
-        }
 
         for h in history:
             h.action_label = ACTION_LABELS.get(h.action, h.action.replace("_", " ").capitalize())
@@ -254,9 +275,30 @@ def task_update(request, pk: int):
             "signal_map": signal_map,
         })
 
-    task = form.save()
-    after_people = list(task.people.values_list("id", flat=True))
+    task = form.save(commit=False)
 
+    assignment_changed = task.assigned_to_id != old_assigned_to_id
+    if assignment_changed and task.assigned_to:
+        task.assigned_by = request.user
+
+    task.save()
+    form.save_m2m()
+    after_people = list(task.people.values_list("id", flat=True))
+    completed_status = Status.objects.filter(
+        scope="task",
+        name__iexact="Afgerond",
+        is_active=True,
+    ).first()
+
+    if (
+        completed_status
+        and before["status_id"] != completed_status.id
+        and task.status_id == completed_status.id
+        and not task.parent_task_id
+        and not task.child_tasks.exists()
+    ):
+        create_admin_review_task_for_completed_task(task, request.user)
+    
     after = {
         "type_id": task.type_id,
         "assigned_to_id": task.assigned_to_id,
@@ -268,12 +310,17 @@ def task_update(request, pk: int):
     }
 
     changes = {k: [before[k], after[k]] for k in before if before[k] != after[k]}
+    
     if before_people != after_people:
         changes["people"] = [before_people, after_people]
 
     if changes:
         log_history(task, request.user, "updated", changes)
-        messages.success(request, "Task bijgewerkt.")
+
+        if assignment_changed and task.assigned_to:
+            create_task_notifications(task, request.user, reassigned=True)
+
+        messages.success(request, "Taak bijgewerkt.")
 
     return redirect("tasks:detail", pk=task.pk)
 
@@ -324,6 +371,7 @@ def task_delete(request, pk: int):
     messages.success(request, "Taak permanent verwijderd.")
     return redirect("tasks:list")
 
+
 @staff_required
 @require_POST
 @transaction.atomic
@@ -353,6 +401,7 @@ def task_toggle_archive(request, pk: int):
     messages.success(request, "Archiefstatus bijgewerkt.")
     return redirect("tasks:list")
 
+
 @staff_required
 @require_POST
 @transaction.atomic
@@ -364,3 +413,104 @@ def task_toggle_archive_detail(request, pk: int):
     log_history(task, request.user, "archived_toggled", {"is_archived": [old, task.is_archived]})
     messages.success(request, "Archiefstatus bijgewerkt.")
     return redirect("tasks:detail", pk=task.pk)
+
+from datetime import timedelta
+from django.utils import timezone
+from django.db.models import Q
+
+@login_required
+def my_tasks(request):
+    task_q = (request.GET.get("q") or "").strip()
+    status_id = (request.GET.get("status") or "").strip()
+    type_id = (request.GET.get("type") or "").strip()
+    person_id = (request.GET.get("person") or "").strip()
+    signal_id = (request.GET.get("signal") or "").strip()
+
+    hide_completed = request.GET.get("hide_completed", "1") == "1"
+
+    tasks = (
+        Task.objects
+        .select_related("type", "status", "assigned_to", "assigned_by", "signal")
+        .prefetch_related("people")
+        .filter(assigned_to=request.user)
+    )
+
+    if hide_completed:
+        tasks = tasks.exclude(status__name__iexact="Afgerond")
+
+    if status_id.isdigit():
+        tasks = tasks.filter(status_id=int(status_id))
+
+    if type_id.isdigit():
+        tasks = tasks.filter(type_id=int(type_id))
+
+    if person_id.isdigit():
+        tasks = tasks.filter(people__id=int(person_id)).distinct()
+
+    if signal_id.isdigit():
+        tasks = tasks.filter(signal_id=int(signal_id))
+
+    if task_q:
+        tasks = tasks.filter(
+            Q(body__icontains=task_q)
+            | Q(type__name__icontains=task_q)
+            | Q(status__name__icontains=task_q)
+            | Q(signal__name__icontains=task_q)
+        )
+
+    tasks = list(tasks.distinct())
+
+    today = timezone.localdate()
+    soon_date = today + timedelta(days=3)
+
+    for task in tasks:
+        if task.due_at:
+            if task.due_at < today:
+                task.urgency = "overdue"
+                task.urgency_rank = 0
+            elif task.due_at == today:
+                task.urgency = "today"
+                task.urgency_rank = 1
+            elif task.due_at <= soon_date:
+                task.urgency = "soon"
+                task.urgency_rank = 2
+            else:
+                task.urgency = "later"
+                task.urgency_rank = 3
+        else:
+            task.urgency = "no_deadline"
+            task.urgency_rank = 4
+
+    tasks.sort(
+        key=lambda task: (
+            task.urgency_rank,
+            task.due_at or today + timedelta(days=99999),
+            -(task.id or 0),
+        )
+    )
+
+    statuses = Status.objects.filter(scope="task", is_active=True).order_by("sort_order", "name")
+    types = TaskType.objects.filter(is_active=True).order_by("sort_order", "name")
+    people = Person.objects.order_by("last_name", "first_name")
+
+    signals = (
+        Signal.objects
+        .filter(tasks__assigned_to=request.user)
+        .distinct()
+        .order_by("-id")
+    )
+
+    return render(request, "core/tasks/my_list.html", {
+        "tasks": tasks,
+        "statuses": statuses,
+        "types": types,
+        "people": people,
+        "signals": signals,
+        "task_q": task_q,
+        "status_id": status_id,
+        "type_id": type_id,
+        "person_id": person_id,
+        "signal_id": signal_id,
+        "hide_completed": hide_completed,
+        "active_nav": "my_tasks",
+    })

@@ -4,6 +4,35 @@
 {% block content %}
 <div class="container py-4">
 
+        {% if task.parent_task %}
+            <div class="alert alert-info">
+                Deze taak hoort bij
+                <a href="{% url 'tasks:detail' task.parent_task.id %}">
+                    taak #{{ task.parent_task.id }}
+                </a>.
+            </div>
+        {% endif %}
+        {% if task.child_tasks.exists %}
+       <div class="alert alert-info">
+                <h5 class="card-title mb-0">Opvolg- / controletaken</h5>
+                <hr class="my-3">
+
+               
+                    {% for child in task.child_tasks.all %}
+                        <a class="list-group-item px-0 py-2 text-decoration-none"
+                        href="{% url 'tasks:detail' child.id %}">
+                            <span class="fw-semibold">
+                                Taak #{{ child.id }} |   </span>
+                                {% if child.status %}{{ child.status.name }}{% endif %}
+                                {% if child.assigned_to %} • {{ child.assigned_to.username }}{% endif %}
+                          
+                        </a>
+                    {% endfor %}
+            
+         
+        </div>
+    {% endif %}
+
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
         <div>
             <h1 class="h3 mb-1">Taak #{{ task.id }}</h1>
@@ -25,6 +54,7 @@
             </form>
             {% endif %}
         </div>
+
     </div>
 
     <div class="row g-4">

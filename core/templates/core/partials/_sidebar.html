@@ -48,6 +48,13 @@
             </a>
             {% endif %}
 
+            {% if perms.core.view_contacts %}
+                 <a class="nav-item {% if active_nav == 'contacts' %}active{% endif %}" href="{% url 'contacts:list' %}">
+                    <span class="nav-ico">👤</span>
+                    <span>Contactpersonen</span>
+                </a>
+            {% endif %}
+
             {% if perms.core.view_jobcoaching %}
             <a class="nav-item {% if active_nav == 'jobcoaching' %}active{% endif %}" href="{% url 'jobcoaching:list' %}">
                 <span class="nav-ico">🧑‍🏫</span>

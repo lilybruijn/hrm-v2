@@ -14,4 +14,5 @@ urlpatterns = [
     path("<int:pk>/archive/", views.task_toggle_archive, name="toggle_archive"),
     path("<int:pk>/restore/", views.task_restore, name="restore"),
     path("<int:pk>/delete/", views.task_delete, name="delete"),
+    path("mine/", views.my_tasks, name="my_list"),
 ]

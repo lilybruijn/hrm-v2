@@ -15,6 +15,7 @@ class Person(models.Model):
         ("inactive", "Inactief"),
         ("dropped_out", "Afgevallen"),
     ]
+    
 
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)

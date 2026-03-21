@@ -18,12 +18,96 @@
                 <input class="search-input" type="text" placeholder="Zoeken (later)..." disabled>
             </div>
 
-            <a class="icon-badge disabled" href="#" title="Notificaties (later)">
-                🔔 <span class="badge">0</span>
-            </a>
+            <div class="dropdown">
+                <a class="icon-badge position-relative"
+                   href="{% url 'notifications:list' %}"
+                   title="Notificaties"
+                   data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    <span class="fs-5">🔔</span>
+                    {% if unread_notifications_count > 0 %}
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">
+                            {{ unread_notifications_count }}
+                        </span>
+                    {% endif %}
+                </a>
 
-            <div class="user-mini">
-                <div class="avatar sm">{{ request.user.username|default:"?"|slice:":1"|upper }}</div>
+                <div class="dropdown-menu dropdown-menu-end shadow p-0" style="min-width: 360px;">
+                    <div class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom">
+                        <strong>Notificaties</strong>
+                        <a href="{% url 'notifications:list' %}" class="small text-decoration-none">
+                            Alles bekijken
+                        </a>
+                    </div>
+
+                    {% if recent_notifications %}
+                        <div class="list-group list-group-flush">
+                            {% for notification in recent_notifications %}
+                                <a href="{% url 'notifications:list' %}"
+                                   class="list-group-item list-group-item-action px-3 py-2">
+                                    <div class="d-flex justify-content-between align-items-start gap-2">
+                                        <div class="me-2">
+                                            <div class="fw-semibold small">
+                                                {{ notification.title }}
+                                                {% if not notification.is_read %}
+                                                    <span class="badge bg-primary ms-1">Nieuw</span>
+                                                {% endif %}
+                                            </div>
+
+                                            {% if notification.message %}
+                                                <div class="text-muted small">
+                                                    {{ notification.message|truncatechars:80 }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+
+                                        <div class="text-muted small text-nowrap">
+                                            {{ notification.created_at|date:"d-m H:i" }}
+                                        </div>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="px-3 py-3 text-muted small">
+                            Je hebt geen notificaties.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="dropdown">
+                <a class="user-mini text-decoration-none"
+                   href="#"
+                   data-bs-toggle="dropdown"
+                   aria-expanded="false">
+                    <div class="avatar sm">{{ request.user.username|default:"?"|slice:":1"|upper }}</div>
+                </a>
+
+                <div class="dropdown-menu dropdown-menu-end shadow">
+                    <div class="px-3 py-2 border-bottom">
+                        <div class="fw-semibold">{{ request.user.username }}</div>
+                        {% if request.user.email %}
+                            <div class="text-muted small">{{ request.user.email }}</div>
+                        {% endif %}
+                    </div>
+
+                    <a class="dropdown-item" href="{% url 'notifications:list' %}">Notificaties</a>
+                    <a class="dropdown-item" href="{% url 'tasks:my_list' %}">Mijn taken</a>
+                    <a class="dropdown-item" href="{% url 'signals:my_list' %}">Mijn meldingen</a>
+
+                    {% if request.user.is_staff %}
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="{% url 'tasks:list' %}">Alle taken</a>
+                        <a class="dropdown-item" href="{% url 'signals:list' %}">Alle meldingen</a>
+                    {% endif %}
+
+                    <div class="dropdown-divider"></div>
+                    <form method="post" action="{% url 'logout' %}" class="px-2 py-1">
+                        {% csrf_token %}
+                        <button type="submit" class="dropdown-item">Uitloggen</button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
