@@ -1,13 +1,14 @@
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import permission_required
 
 from core.auth import staff_required
 from core.models import JobCoachingPeriod, Person
 from core.jobcoaching.forms import JobCoachingPeriodForm
 
 
-@staff_required
+@permission_required("core.view_jobcoachingperiod", raise_exception=True)
 def jobcoaching_list(request):
     archived = (request.GET.get("archived") or "").strip()
 
@@ -31,7 +32,7 @@ def jobcoaching_list(request):
     })
 
 
-@staff_required
+@permission_required("core.add_jobcoachingperiod", raise_exception=True)
 def jobcoaching_create(request):
     person_id = request.GET.get("person")
     person = None
@@ -55,11 +56,11 @@ def jobcoaching_create(request):
     })
 
 
-@staff_required
+@permission_required("core.view_jobcoachingperiod", raise_exception=True)
 def jobcoaching_detail(request, pk: int):
     period = get_object_or_404(
         JobCoachingPeriod.objects.select_related("person", "organization", "status"),
-        pk=pk
+        pk=pk,
     )
 
     return render(request, "core/jobcoaching/detail.html", {
@@ -68,6 +69,7 @@ def jobcoaching_detail(request, pk: int):
     })
 
 
+@permission_required("core.change_jobcoachingperiod", raise_exception=True)
 @staff_required
 def jobcoaching_update(request, pk: int):
     period = get_object_or_404(JobCoachingPeriod, pk=pk)
@@ -89,7 +91,7 @@ def jobcoaching_update(request, pk: int):
     })
 
 
-@staff_required
+@permission_required("core.change_jobcoachingperiod", raise_exception=True)
 @require_POST
 def jobcoaching_archive(request, pk: int):
     period = get_object_or_404(JobCoachingPeriod, pk=pk)
@@ -99,6 +101,7 @@ def jobcoaching_archive(request, pk: int):
     return redirect("jobcoaching:list")
 
 
+@permission_required("core.change_jobcoachingperiod", raise_exception=True)
 @staff_required
 @require_POST
 def jobcoaching_restore(request, pk: int):

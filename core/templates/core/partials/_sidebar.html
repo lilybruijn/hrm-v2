@@ -20,47 +20,69 @@
                 <span>Dashboard</span>
             </a>
 
+            {% if perms.users.view %}
+                 <a class="nav-item {% if active_nav == 'users' %}active{% endif %}" href="{% url 'users:list' %}">
+                    <span class="nav-ico">👤</span>
+                    <span>Gebruikers</span>
+                </a>
+            {% endif %}
 
+            {% if perms.core.view_settings %}
             <a class="nav-item {% if active_nav == 'settings' %}active{% endif %}" href="{% url 'settings:index' %}">
                 <span class="nav-ico">⚙</span>
                 <span>Instellingen</span>
             </a>
+            {% endif %}
 
+            {% if perms.core.view_person %}
             <a class="nav-item {% if active_nav == 'people' %}active{% endif %}" href="{% url 'people:list' %}">
                 <span class="nav-ico">👤</span>
                 <span>Personen</span>
             </a>
+            {% endif %}
 
+            {% if perms.core.view_organization %}
             <a class="nav-item {% if active_nav == 'organizations' %}active{% endif %}" href="{% url 'organizations:list' %}">
                 <span class="nav-ico">🏢</span>
                 <span>Organisaties</span>
             </a>
+            {% endif %}
 
+            {% if perms.core.view_jobcoaching %}
             <a class="nav-item {% if active_nav == 'jobcoaching' %}active{% endif %}" href="{% url 'jobcoaching:list' %}">
                 <span class="nav-ico">🧑‍🏫</span>
                 <span>Jobcoaching</span>
             </a>
+            {% endif %}
 
+            {% if perms.core.view_wage_values %}
             <a class="nav-item {% if active_nav == 'wage_values' %}active{% endif %}" href="{% url 'wage_values:list' %}">
                 <span class="nav-ico">📊</span>
                 <span>Loonwaardes</span>
             </a>
+            {% endif %}
 
+            {% if perms.core.view_activity %}
             <a class="nav-item {% if active_nav == 'activities' %}active{% endif %}"
                href="{% url 'activities:list' %}">
                 <span class="nav-ico">🕘</span>
                 <span>Activiteiten</span>
             </a>
+            {% endif %}
 
+            {% if perms.core.view_signal %}
             <a class="nav-item {% if active_nav == 'signals' %}active{% endif %}" href="{% url 'signals:list' %}">
                 <span class="nav-ico">📌</span>
                 <span>Meldingen</span>
             </a>
+            {% endif %}
 
+            {% if perms.core.view_task %}
             <a class="nav-item {% if active_nav == 'tasks' %}active{% endif %}" href="{% url 'tasks:list' %}">
                 <span class="nav-ico">✅</span>
                 <span>Taken</span>
             </a>
+            {% endif %}
 
             <a class="nav-item disabled" href="#" title="Komt later">
                 <span class="nav-ico">✉️</span>

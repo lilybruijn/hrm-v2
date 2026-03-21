@@ -3,6 +3,7 @@
 {% block page_title %}Jobcoaching - {{ period.person.full_name }}{% endblock %}
 
 {% block page_actions %}
+{% if perms.core.change_jobcoachingperiod %}
 <a href="{% url 'jobcoaching:update' period.id %}" class="btn btn-outline-secondary">Bewerken</a>
 
 {% if period.is_archived %}
@@ -16,8 +17,10 @@
         <button class="btn btn-outline-warning" type="submit">Archiveren</button>
     </form>
 {% endif %}
+{% endif %}
 {% endblock %}
 
+{% if perms.core.view_jobcoachingperiod %}
 {% block content %}
 <div class="card shadow-sm">
     <div class="card-body">
@@ -31,3 +34,4 @@
     </div>
 </div>
 {% endblock %}
+{% endif %}

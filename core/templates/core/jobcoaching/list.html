@@ -37,8 +37,8 @@
                                 {% if period.organization %} • {{ period.organization.name }}{% endif %}
                                 {% if period.is_archived %} • <span class="text-danger">Gearchiveerd</span>{% endif %}
                             </div>
-                        </div>
-
+                        </div>      
+                        {% if perms.core.change_jobcoaching_period %}
                         <div class="d-flex gap-2">
                             <a href="{% url 'jobcoaching:update' period.id %}" class="btn btn-sm btn-outline-secondary">Bewerken</a>
 
@@ -54,6 +54,7 @@
                                 </form>
                             {% endif %}
                         </div>
+                        {% endif %}
                     </div>
                 </div>
             {% empty %}

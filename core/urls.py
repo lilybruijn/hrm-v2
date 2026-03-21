@@ -26,6 +26,10 @@ urlpatterns = [
     path("organizations/", include("core.organizations.urls")),
     path("jobcoaching/", include("core.jobcoaching.urls")),
     path("wage-values/", include("core.wage_values.urls")),
+
+    path("impersonation/", include("core.impersonation.urls")),
+    
+    path("users/", include("core.users.urls")),
 ]
 
 if settings.DEBUG:
