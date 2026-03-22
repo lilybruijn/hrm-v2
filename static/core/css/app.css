@@ -181,6 +181,82 @@ a {
     background: #fff;
     border-color: #e9ecef #e9ecef #fff;
 }
+
+#sidebar .nav-group {
+    display: block;
+    width: 100%;
+    margin: 4px 6px;
+}
+
+#sidebar .nav-group-toggle {
+    width: 100%;
+    background: none;
+    border: 1px solid transparent;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    color: inherit;
+}
+
+#sidebar .nav-group-toggle:hover {
+    background: rgba(17,24,39,.03);
+}
+
+#sidebar .nav-group-toggle.active {
+    background: var(--soft);
+    border-color: rgba(105,108,255,.20);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+#sidebar .nav-caret {
+    margin-left: auto;
+    transition: transform .2s ease;
+}
+
+#sidebar .nav-group.open .nav-caret {
+    transform: rotate(180deg);
+}
+
+#sidebar .nav-submenu {
+    display: none !important;
+    margin-top: 6px;
+    margin-left: 44px;
+    width: calc(100% - 44px);
+}
+
+#sidebar .nav-group.open .nav-submenu {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 4px;
+}
+
+#sidebar .nav-subitem {
+    display: block !important;
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 10px;
+    color: var(--muted);
+    text-decoration: none;
+    line-height: 1.2;
+}
+
+#sidebar .nav-subitem:hover {
+    background: rgba(17,24,39,.03);
+    color: var(--text);
+}
+
+#sidebar .nav-subitem.active {
+    background: var(--soft);
+    color: var(--primary);
+    font-weight: 600;
+}
+
 .pill {
     margin-left: auto;
     font-size: 12px;

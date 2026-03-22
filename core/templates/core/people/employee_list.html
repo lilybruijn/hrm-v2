@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Medewerkers{% endblock %}
+
+{% block content %}
+<div class="page">
+    <div class="page-header row">
+        <div class="col-md-8 mb-3">
+            <h1>Medewerkers</h1>
+            <p class="muted mb-0">Overzicht van alle medewerkers</p>
+        </div>
+        <div class="col-md-4 mb-3" style="display:flex; align-items:flex-end; justify-content:flex-end;">
+            <a class="btn btn-primary" href="{% url 'people:create' %}?type=employee">+ Nieuwe medewerker</a>
+        </div>
+    </div>
+
+    <form method="get" class="card mb-3" autocomplete="off">
+        <div class="card-body">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-6">
+                    <label class="form-label mb-1">Zoeken</label>
+                    <input class="form-control" type="text" name="q" placeholder="Naam, email, telefoon..." value="{{ q }}">
+                </div>
+
+                <input type="hidden" name="sort" value="{{ sort }}">
+                <input type="hidden" name="dir" value="{{ dir }}">
+
+                <div class="col-12">
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary" type="submit">Filter</button>
+                        <a class="btn btn-outline-secondary" href="{% url 'people:employees' %}">Reset</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="card p-3">
+        <div class="table-responsive">
+            <table class="table table-sm align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>
+                            <a href="?q={{ q }}&sort=id&dir={% if sort == 'id' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                                # {% if sort == "id" %}{% if dir == "asc" %}▲{% else %}▼{% endif %}{% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?q={{ q }}&sort=name&dir={% if sort == 'name' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                                Naam {% if sort == "name" %}{% if dir == "asc" %}▲{% else %}▼{% endif %}{% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?q={{ q }}&sort=email&dir={% if sort == 'email' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                                Email {% if sort == "email" %}{% if dir == "asc" %}▲{% else %}▼{% endif %}{% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="?q={{ q }}&sort=phone&dir={% if sort == 'phone' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                                Telefoon {% if sort == "phone" %}{% if dir == "asc" %}▲{% else %}▼{% endif %}{% endif %}
+                            </a>
+                        </th>
+                        <th class="text-end"></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for p in people %}
+                    <tr>
+                        <td class="text-muted">{{ p.id }}</td>
+                        <td class="fw-semibold">{{ p.first_name }} {{ p.last_name }}</td>
+                        <td>{{ p.email|default:"–" }}</td>
+                        <td>{{ p.phone|default:"–" }}</td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-2">
+                                <a class="btn btn-sm btn-outline-primary" href="{% url 'people:detail' p.id %}">Open</a>
+                                <form method="post" action="{% url 'people:toggle_archive' p.id %}" onsubmit="return confirm('Weet je zeker dat je deze medewerker wilt archiveren?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">Archiveren</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">Geen medewerkers gevonden.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

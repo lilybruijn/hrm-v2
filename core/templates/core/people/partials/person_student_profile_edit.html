@@ -1,0 +1,157 @@
+<div id="person-student-profile-card">
+    <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+        <div>
+            <h6 class="mb-1">Studiegegevens bewerken</h6>
+            <div class="text-muted small">Status, traject en facturatie</div>
+        </div>
+    </div>
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <form
+        hx-post="{% url 'people:student_profile_edit_partial' person.id %}"
+        hx-target="#person-student-profile-card"
+        hx-swap="outerHTML"
+        hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+        autocomplete="off">
+
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {% for error in form.non_field_errors %}
+                    <div>{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="small text-muted fw-semibold">Status</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="form-check mt-4">
+                    {{ form.is_active_student }}
+                    <label class="form-check-label" for="{{ form.is_active_student.id_for_label }}">
+                        Actieve student
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="form-check mt-4">
+                    {{ form.has_dropped_out }}
+                    <label class="form-check-label" for="{{ form.has_dropped_out.id_for_label }}">
+                        Afgevallen
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label class="form-label">Uitvaldatum</label>
+                {{ form.dropout_date }}
+                {% for error in form.dropout_date.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="col-12">
+                <label class="form-label">Reden uitval</label>
+                {{ form.dropout_reason }}
+            </div>
+
+            <div class="col-12">
+                <hr>
+                <div class="small text-muted fw-semibold">Traject</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label class="form-label">Startdatum traject</label>
+                {{ form.trajectory_start_date }}
+                {% for error in form.trajectory_start_date.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label class="form-label">Einddatum traject</label>
+                {{ form.trajectory_end_date }}
+                {% for error in form.trajectory_end_date.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="form-check mt-4">
+                    {{ form.has_diploma }}
+                    <label class="form-check-label" for="{{ form.has_diploma.id_for_label }}">
+                        Diploma
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="form-check mt-4">
+                    {{ form.has_job_guarantee }}
+                    <label class="form-check-label" for="{{ form.has_job_guarantee.id_for_label }}">
+                        Baangarantie
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <hr>
+                <div class="small text-muted fw-semibold">Facturatie</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label class="form-label">Factuurnummer</label>
+                {{ form.invoice_number }}
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label class="form-label">Factuurstatus</label>
+                {{ form.invoice_status }}
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label class="form-label">Factuur verstuurd datum</label>
+                {{ form.invoice_sent_date }}
+                {% for error in form.invoice_sent_date.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="col-12 col-md-6">
+                <label class="form-label">Factuur betaald datum</label>
+                {{ form.invoice_paid_date }}
+                {% for error in form.invoice_paid_date.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="col-12">
+                <label class="form-label">Notities</label>
+                {{ form.notes }}
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-3">
+            <button class="btn btn-primary btn-sm" type="submit">Opslaan</button>
+
+            <button
+                class="btn btn-outline-secondary btn-sm"
+                type="button"
+                hx-get="{% url 'people:student_profile_view_partial' person.id %}"
+                hx-target="#person-student-profile-card"
+                hx-swap="outerHTML">
+                Annuleren
+            </button>
+        </div>
+    </form>
+</div>

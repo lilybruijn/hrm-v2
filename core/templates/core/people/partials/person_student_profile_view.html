@@ -1,0 +1,150 @@
+<div id="person-student-profile-card">
+    <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+        <div>
+            <h6 class="mb-1">Studiegegevens</h6>
+            <div class="text-muted small">Status, traject en facturatie</div>
+        </div>
+
+        <button
+            class="btn btn-sm btn-outline-primary"
+            type="button"
+            hx-get="{% url 'people:student_profile_edit_partial' person.id %}"
+            hx-target="#person-student-profile-card"
+            hx-swap="outerHTML">
+            Bewerken
+        </button>
+    </div>
+
+    {% if student_profile %}
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="small text-muted fw-semibold">Status</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="text-muted small">Actieve student</div>
+                <div>{{ student_profile.is_active_student|yesno:"Ja,Nee" }}</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="text-muted small">Afgevallen</div>
+                <div>{{ student_profile.has_dropped_out|yesno:"Ja,Nee" }}</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="text-muted small">Uitvaldatum</div>
+                <div>
+                    {% if student_profile.dropout_date %}
+                        {{ student_profile.dropout_date|date:"d-m-Y" }}
+                    {% else %}
+                        <span class="text-muted">–</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="text-muted small">Reden uitval</div>
+                <div>
+                    {% if student_profile.dropout_reason %}
+                        {{ student_profile.dropout_reason|linebreaksbr }}
+                    {% else %}
+                        <span class="text-muted">–</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-12">
+                <hr>
+                <div class="small text-muted fw-semibold">Traject</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="text-muted small">Startdatum traject</div>
+                <div>
+                    {% if student_profile.trajectory_start_date %}
+                        {{ student_profile.trajectory_start_date|date:"d-m-Y" }}
+                    {% else %}
+                        <span class="text-muted">–</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="text-muted small">Einddatum traject</div>
+                <div>
+                    {% if student_profile.trajectory_end_date %}
+                        {{ student_profile.trajectory_end_date|date:"d-m-Y" }}
+                    {% else %}
+                        <span class="text-muted">–</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="text-muted small">Diploma</div>
+                <div>{{ student_profile.has_diploma|yesno:"Ja,Nee" }}</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="text-muted small">Baangarantie</div>
+                <div>{{ student_profile.has_job_guarantee|yesno:"Ja,Nee" }}</div>
+            </div>
+
+            <div class="col-12">
+                <hr>
+                <div class="small text-muted fw-semibold">Facturatie</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="text-muted small">Factuurnummer</div>
+                <div>{{ student_profile.invoice_number|default:"–" }}</div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="text-muted small">Factuurstatus</div>
+                <div>
+                    {% if student_profile.invoice_status %}
+                        {{ student_profile.get_invoice_status_display }}
+                    {% else %}
+                        <span class="text-muted">–</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="text-muted small">Factuur verstuurd</div>
+                <div>
+                    {% if student_profile.invoice_sent_date %}
+                        {{ student_profile.invoice_sent_date|date:"d-m-Y" }}
+                    {% else %}
+                        <span class="text-muted">–</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+                <div class="text-muted small">Factuur betaald</div>
+                <div>
+                    {% if student_profile.invoice_paid_date %}
+                        {{ student_profile.invoice_paid_date|date:"d-m-Y" }}
+                    {% else %}
+                        <span class="text-muted">–</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="text-muted small">Notities</div>
+                <div>
+                    {% if student_profile.notes %}
+                        {{ student_profile.notes|linebreaksbr }}
+                    {% else %}
+                        <span class="text-muted">–</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-muted">Nog geen studentprofiel.</div>
+    {% endif %}
+</div>

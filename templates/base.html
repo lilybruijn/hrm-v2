@@ -70,8 +70,21 @@
 
     <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+
     {% block extra_js %}
     <script>
+          document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll("[data-nav-group]").forEach(function (group) {
+        const toggle = group.querySelector("[data-nav-group-toggle]");
+        if (!toggle) return;
+
+        toggle.addEventListener("click", function () {
+            const isOpen = group.classList.contains("open");
+            group.classList.toggle("open", !isOpen);
+            toggle.setAttribute("aria-expanded", String(!isOpen));
+        });
+    });
+});
         document.addEventListener("DOMContentLoaded", function () {
             document.querySelectorAll(".js-select").forEach(function (el) {
                 if (el.tomselect) return;
