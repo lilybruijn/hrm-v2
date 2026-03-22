@@ -40,7 +40,6 @@ def get_person_history(person):
 @staff_required
 def person_list(request):
     qs = Person.objects.all()
-
     q = (request.GET.get("q") or "").strip()
     archived = (request.GET.get("archived") or "").strip()
 
@@ -50,14 +49,18 @@ def person_list(request):
         qs = qs.filter(is_archived=False)
 
     if q:
-        qs = qs.filter(
-            Q(first_name__icontains=q) |
-            Q(last_name__icontains=q) |
-            Q(email__icontains=q)
-        )
+        parts = [part.strip() for part in q.split() if part.strip()]
+
+        name_query = Q()
+        for part in parts:
+            name_query &= (
+                Q(first_name__icontains=part) |
+                Q(last_name__icontains=part)
+            )
+
+        qs = qs.filter(name_query | Q(email__icontains=q))
 
     qs = qs.order_by("last_name", "first_name")
-
     paginator = Paginator(qs, 25)
     page_obj = paginator.get_page(request.GET.get("page"))
 
@@ -68,7 +71,6 @@ def person_list(request):
         "archived": archived,
         "active_nav": "people",
     })
-
 
 @staff_required
 @transaction.atomic
@@ -170,9 +172,51 @@ def person_update(request, pk: int):
     }
 
     form = PersonForm(request.POST, instance=person)
+
     if not form.is_valid():
         messages.error(request, "Formulier is niet geldig.")
-        return redirect("people:detail", pk=person.pk)
+        person_ct = ContentType.objects.get_for_model(Person)
+        notes = (
+            Note.objects
+            .select_related("author")
+            .filter(content_type=person_ct, object_id=person.pk)
+            .order_by("-created_at")
+        )
+        contact_links = person.person_contacts.select_related(
+            "contact_person",
+            "relation_type",
+            "contact_person__organization",
+        )
+        history = get_person_history(person)
+
+        signals = (
+            Signal.objects
+            .select_related("type", "status", "assigned_to")
+            .filter(people=person)
+            .distinct()
+            .order_by("-created_at")[:10]
+        )
+
+        tasks = (
+            Task.objects
+            .select_related("type", "status", "assigned_to", "signal")
+            .filter(people=person, is_archived=False)
+            .distinct()
+            .order_by("due_at", "-created_at")[:10]
+        )
+
+        return render(request, "core/people/detail.html", {
+            "person": person,
+            "form": form,
+            "signals": signals,
+            "tasks": tasks,
+            "notes": notes,
+            "history": history,
+            "active_nav": "people",
+            "student_profile": getattr(person, "student_profile", None),
+            "employee_profile": getattr(person, "employee_profile", None),
+            "contact_links": contact_links,
+        })
 
     person = form.save()
 
@@ -187,8 +231,8 @@ def person_update(request, pk: int):
     changes = {k: [before[k], after[k]] for k in before if before[k] != after[k]}
     if changes:
         log_history(person, request.user, "updated", changes)
-        messages.success(request, "Persoon bijgewerkt.")
 
+    messages.success(request, "Persoon bijgewerkt.")
     return redirect("people:detail", pk=person.pk)
 
 
@@ -369,6 +413,7 @@ def person_data_edit_partial(request, pk: int):
         }
 
         form = PersonForm(request.POST, instance=person)
+
         if form.is_valid():
             person = form.save()
 
@@ -398,9 +443,15 @@ def person_data_edit_partial(request, pk: int):
                 "employee_profile": getattr(person, "employee_profile", None),
                 "history": history,
             })
-    else:
-        form = PersonForm(instance=person)
 
+        return render(request, "core/people/partials/person_data_edit.html", {
+            "person": person,
+            "form": form,
+            "student_profile": getattr(person, "student_profile", None),
+            "employee_profile": getattr(person, "employee_profile", None),
+        })
+
+    form = PersonForm(instance=person)
     return render(request, "core/people/partials/person_data_edit.html", {
         "person": person,
         "form": form,
