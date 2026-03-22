@@ -17,8 +17,8 @@ class JobCoachingPeriodForm(forms.ModelForm):
             "person": forms.Select(attrs={"class": "form-select js-select"}),
             "organization": forms.Select(attrs={"class": "form-select js-select"}),
             "status": forms.Select(attrs={"class": "form-select"}),
-            "start_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
-            "end_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "start_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}, format="%Y-%m-%d"),
+            "end_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}, format="%Y-%m-%d"),
             "notes": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
         }
 

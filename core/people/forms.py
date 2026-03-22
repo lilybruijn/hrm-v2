@@ -25,7 +25,7 @@ class PersonForm(forms.ModelForm):
             "person_type": forms.Select(attrs={"class": "form-select"}),
             "first_name": forms.TextInput(attrs={"class": "form-control"}),
             "last_name": forms.TextInput(attrs={"class": "form-control"}),
-            "birth_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "birth_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}, format="%Y-%m-%d"),
             "bsn": forms.TextInput(attrs={"class": "form-control"}),
             "email": forms.EmailInput(attrs={"class": "form-control"}),
             "phone": forms.TextInput(attrs={"class": "form-control"}),

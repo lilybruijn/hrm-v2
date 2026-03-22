@@ -74,6 +74,18 @@
                         Gegevens
                     </button>
                 </li>
+                {% if person.person_type == "student" or student_profile %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link"
+                            id="studentprofile-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#studentprofile-pane"
+                            type="button"
+                            role="tab">
+                        Studiegegevens
+                    </button>
+                </li>
+                {% endif %}
             </ul>
 
             <div class="tab-content">
@@ -84,6 +96,12 @@
                 <div class="tab-pane fade" id="gegevens-pane" role="tabpanel">
                     {% include "core/people/partials/person_data_view.html" %}
                 </div>
+                
+                {% if person.person_type == "student" or student_profile %}
+                <div class="tab-pane fade" id="studentprofile-pane" role="tabpanel">
+                    {% include "core/people/partials/person_student_profile_view.html" %}
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -206,6 +224,8 @@
             </div>
         </div>
     </div>
+
+
 
     <div class="col-12">
         <div class="card shadow-sm">

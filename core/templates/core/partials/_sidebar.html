@@ -21,24 +21,43 @@
             </a>
 
             {% if perms.users.view %}
-                 <a class="nav-item {% if active_nav == 'users' %}active{% endif %}" href="{% url 'users:list' %}">
-                    <span class="nav-ico">👤</span>
-                    <span>Gebruikers</span>
-                </a>
+            <a class="nav-item {% if active_nav == 'users' %}active{% endif %}" href="{% url 'users:list' %}">
+                <span class="nav-ico">👤</span>
+                <span>Gebruikers</span>
+            </a>
             {% endif %}
 
             {% if perms.core.view_settings %}
             <a class="nav-item {% if active_nav == 'settings' %}active{% endif %}" href="{% url 'settings:index' %}">
-                <span class="nav-ico">⚙</span>
+                <span class="nav-ico">⚙️</span>
                 <span>Instellingen</span>
             </a>
             {% endif %}
 
             {% if perms.core.view_person %}
-            <a class="nav-item {% if active_nav == 'people' %}active{% endif %}" href="{% url 'people:list' %}">
-                <span class="nav-ico">👤</span>
-                <span>Personen</span>
-            </a>
+            <div class="nav-group {% if active_nav == 'people_students' or active_nav == 'people_employees' or active_nav == 'people_archived' %}open{% endif %}" data-nav-group>
+                <button
+                    class="nav-group-toggle {% if active_nav == 'people_students' or active_nav == 'people_employees' or active_nav == 'people_archived' %}active{% endif %}"
+                    type="button"
+                    data-nav-group-toggle
+                    aria-expanded="{% if active_nav == 'people_students' or active_nav == 'people_employees' or active_nav == 'people_archived' %}true{% else %}false{% endif %}">
+                    <span class="nav-ico">👥</span>
+                    <span>Personen</span>
+                    <span class="nav-caret">▾</span>
+                </button>
+
+                <div class="nav-submenu" data-nav-submenu>
+                    <a class="nav-subitem {% if active_nav == 'people_students' %}active{% endif %}" href="{% url 'people:students' %}">
+                        Studenten
+                    </a>
+                    <a class="nav-subitem {% if active_nav == 'people_employees' %}active{% endif %}" href="{% url 'people:employees' %}">
+                        Medewerkers
+                    </a>
+                    <a class="nav-subitem {% if active_nav == 'people_archived' %}active{% endif %}" href="{% url 'people:archived' %}">
+                        Archief
+                    </a>
+                </div>
+            </div>
             {% endif %}
 
             {% if perms.core.view_organization %}
@@ -49,10 +68,10 @@
             {% endif %}
 
             {% if perms.core.view_contacts %}
-                 <a class="nav-item {% if active_nav == 'contacts' %}active{% endif %}" href="{% url 'contacts:list' %}">
-                    <span class="nav-ico">👤</span>
-                    <span>Contactpersonen</span>
-                </a>
+            <a class="nav-item {% if active_nav == 'contacts' %}active{% endif %}" href="{% url 'contacts:list' %}">
+                <span class="nav-ico">☎️</span>
+                <span>Contactpersonen</span>
+            </a>
             {% endif %}
 
             {% if perms.core.view_jobcoaching %}
@@ -70,8 +89,7 @@
             {% endif %}
 
             {% if perms.core.view_activity %}
-            <a class="nav-item {% if active_nav == 'activities' %}active{% endif %}"
-               href="{% url 'activities:list' %}">
+            <a class="nav-item {% if active_nav == 'activities' %}active{% endif %}" href="{% url 'activities:list' %}">
                 <span class="nav-ico">🕘</span>
                 <span>Activiteiten</span>
             </a>

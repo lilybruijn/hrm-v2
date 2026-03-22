@@ -118,44 +118,7 @@
             <div>{% if person.city %}{{ person.city }}{% else %}<span class="text-muted">–</span>{% endif %}</div>
         </div>
 
-        {% if student_profile %}
-            <div class="col-12">
-                <hr>
-                <div class="small text-muted fw-semibold">Studentprofiel</div>
-            </div>
-
-            <div class="col-12 col-md-6">
-                <div class="text-muted small">Actieve student</div>
-                <div>{{ student_profile.is_active_student|yesno:"Ja,Nee" }}</div>
-            </div>
-
-            <div class="col-12 col-md-6">
-                <div class="text-muted small">Afgevallen</div>
-                <div>{{ student_profile.has_dropped_out|yesno:"Ja,Nee" }}</div>
-            </div>
-
-            <div class="col-12 col-md-6">
-                <div class="text-muted small">Uitvaldatum</div>
-                <div>
-                    {% if student_profile.dropout_date %}
-                        {{ student_profile.dropout_date|date:"d-m-Y" }}
-                    {% else %}
-                        <span class="text-muted">–</span>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="col-12">
-                <div class="text-muted small">Reden uitval</div>
-                <div>
-                    {% if student_profile.dropout_reason %}
-                        {{ student_profile.dropout_reason|linebreaksbr }}
-                    {% else %}
-                        <span class="text-muted">–</span>
-                    {% endif %}
-                </div>
-            </div>
-        {% endif %}
+        
 
         {% if employee_profile %}
             <div class="col-12">

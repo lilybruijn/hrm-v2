@@ -7,14 +7,19 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST, require_http_methods
 from django.template.loader import render_to_string
 from django.http import HttpResponse
+from datetime import timedelta
+
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
 
 from core.auth import staff_required
 from core.models.history import HistoryEvent
 from core.models.notes import Note
-from core.models.people import Person
 from core.models.core import Signal, Task
 from .forms import PersonForm
 from core.signals.services import log_history
+from .student_forms import StudentProfileForm
+from core.models.people import Person, StudentProfile, EmployeeProfile
 
 def get_person_history(person):
     person_ct = ContentType.objects.get_for_model(Person)
@@ -73,24 +78,207 @@ def person_list(request):
     })
 
 @staff_required
-@transaction.atomic
+def student_list(request):
+    qs = (
+        Person.objects
+        .filter(person_type="student", is_archived=False)
+        .select_related("student_profile")
+    )
+
+    q = (request.GET.get("q") or "").strip()
+    status = (request.GET.get("status") or "").strip()
+    sort = (request.GET.get("sort") or "name").strip()
+    direction = (request.GET.get("dir") or "asc").strip()
+
+    if q:
+        parts = [part.strip() for part in q.split() if part.strip()]
+
+        name_query = Q()
+        for part in parts:
+            name_query &= (
+                Q(first_name__icontains=part) |
+                Q(last_name__icontains=part)
+            )
+
+        qs = qs.filter(
+            name_query |
+            Q(email__icontains=q) |
+            Q(phone__icontains=q)
+        )
+
+    if status == "active":
+        qs = qs.filter(student_profile__is_active_student=True, student_profile__has_dropped_out=False)
+    elif status == "dropped_out":
+        qs = qs.filter(student_profile__has_dropped_out=True)
+    elif status == "almost_finished":
+        today = timezone.localdate()
+        soon = today + timedelta(days=30)
+        qs = qs.filter(
+            student_profile__has_dropped_out=False,
+            student_profile__trajectory_end_date__isnull=False,
+            student_profile__trajectory_end_date__gte=today,
+            student_profile__trajectory_end_date__lte=soon,
+        )
+
+    sort_map = {
+        "id": "id",
+        "name": "last_name",
+        "status": "student_profile__has_dropped_out",
+        "trajectory_end": "student_profile__trajectory_end_date",
+        "diploma": "student_profile__has_diploma",
+        "invoice_status": "student_profile__invoice_status",
+        "created_at": "created_at",
+    }
+
+    order_field = sort_map.get(sort, "last_name")
+    if direction == "desc":
+        order_field = f"-{order_field}"
+
+    qs = qs.order_by(order_field, "last_name", "first_name")
+
+    return render(request, "core/people/student_list.html", {
+        "people": qs,
+        "q": q,
+        "status": status,
+        "sort": sort,
+        "dir": direction,
+        "active_nav": "people_students",
+    })
+
+@staff_required
+def employee_list(request):
+    qs = (
+        Person.objects
+        .filter(person_type="employee", is_archived=False)
+    )
+
+    q = (request.GET.get("q") or "").strip()
+    sort = (request.GET.get("sort") or "name").strip()
+    direction = (request.GET.get("dir") or "asc").strip()
+
+    if q:
+        parts = [part.strip() for part in q.split() if part.strip()]
+
+        name_query = Q()
+        for part in parts:
+            name_query &= (
+                Q(first_name__icontains=part) |
+                Q(last_name__icontains=part)
+            )
+
+        qs = qs.filter(
+            name_query |
+            Q(email__icontains=q) |
+            Q(phone__icontains=q)
+        )
+
+    sort_map = {
+        "id": "id",
+        "name": "last_name",
+        "email": "email",
+        "phone": "phone",
+        "created_at": "created_at",
+    }
+
+    order_field = sort_map.get(sort, "last_name")
+    if direction == "desc":
+        order_field = f"-{order_field}"
+
+    qs = qs.order_by(order_field, "last_name", "first_name")
+
+    return render(request, "core/people/employee_list.html", {
+        "people": qs,
+        "q": q,
+        "sort": sort,
+        "dir": direction,
+        "active_nav": "people_employees",
+    })
+
+@staff_required
+def archived_list(request):
+    qs = (
+        Person.objects
+        .filter(is_archived=True)
+        .select_related("student_profile")
+    )
+
+    q = (request.GET.get("q") or "").strip()
+    person_type = (request.GET.get("type") or "").strip()
+    sort = (request.GET.get("sort") or "name").strip()
+    direction = (request.GET.get("dir") or "asc").strip()
+
+    if q:
+        parts = [part.strip() for part in q.split() if part.strip()]
+
+        name_query = Q()
+        for part in parts:
+            name_query &= (
+                Q(first_name__icontains=part) |
+                Q(last_name__icontains=part)
+            )
+
+        qs = qs.filter(
+            name_query |
+            Q(email__icontains=q) |
+            Q(phone__icontains=q)
+        )
+
+    if person_type:
+        qs = qs.filter(person_type=person_type)
+
+    sort_map = {
+        "id": "id",
+        "name": "last_name",
+        "type": "person_type",
+        "email": "email",
+        "phone": "phone",
+        "created_at": "created_at",
+    }
+
+    order_field = sort_map.get(sort, "last_name")
+    if direction == "desc":
+        order_field = f"-{order_field}"
+
+    qs = qs.order_by(order_field, "last_name", "first_name")
+
+    return render(request, "core/people/archived_list.html", {
+        "people": qs,
+        "q": q,
+        "person_type": person_type,
+        "sort": sort,
+        "dir": direction,
+        "active_nav": "people_archived",
+    })
+
+@staff_required
 def person_create(request):
+    initial = {}
+    requested_type = (request.GET.get("type") or "").strip()
+
+    if requested_type in ["student", "employee"]:
+        initial["person_type"] = requested_type
+
     if request.method == "POST":
         form = PersonForm(request.POST)
         if form.is_valid():
             person = form.save()
+
+            if person.person_type == "student":
+                StudentProfile.objects.get_or_create(person=person)
+            elif person.person_type == "employee":
+                EmployeeProfile.objects.get_or_create(person=person)
+
             log_history(person, request.user, "created", {})
             messages.success(request, "Persoon aangemaakt.")
             return redirect("people:detail", pk=person.pk)
     else:
-        form = PersonForm()
+        form = PersonForm(initial=initial)
 
     return render(request, "core/people/form.html", {
         "form": form,
         "mode": "create",
         "active_nav": "people",
     })
-
 
 @staff_required
 def person_detail(request, pk: int):
@@ -219,7 +407,11 @@ def person_update(request, pk: int):
         })
 
     person = form.save()
-
+    if person.person_type == "student":
+        StudentProfile.objects.get_or_create(person=person)
+    elif person.person_type == "employee":
+        EmployeeProfile.objects.get_or_create(person=person)
+        
     after = {
         "person_type": person.person_type,
         "first_name": person.first_name,
@@ -417,6 +609,11 @@ def person_data_edit_partial(request, pk: int):
         if form.is_valid():
             person = form.save()
 
+            if person.person_type == "student":
+                StudentProfile.objects.get_or_create(person=person)
+            elif person.person_type == "employee":
+                EmployeeProfile.objects.get_or_create(person=person)
+
             after = {
                 "person_type": person.person_type,
                 "first_name": person.first_name,
@@ -468,4 +665,45 @@ def person_history_partial(request, pk: int):
     return render(request, "core/people/partials/person_history.html", {
         "person": person,
         "history": history,
+    })
+
+@staff_required
+@require_http_methods(["GET"])
+def person_student_profile_view_partial(request, pk: int):
+    person = get_object_or_404(Person, pk=pk)
+    student_profile = getattr(person, "student_profile", None)
+    return render(request, "core/people/partials/person_student_profile_view.html", {
+        "person": person,
+        "student_profile": student_profile,
+    })
+
+
+@staff_required
+@require_http_methods(["GET", "POST"])
+def person_student_profile_edit_partial(request, pk: int):
+    person = get_object_or_404(Person, pk=pk)
+    student_profile, _ = StudentProfile.objects.get_or_create(person=person)
+
+    if request.method == "POST":
+        form = StudentProfileForm(request.POST, instance=student_profile)
+
+        if form.is_valid():
+            form.save()
+
+            return render(request, "core/people/partials/person_student_profile_view.html", {
+                "person": person,
+                "student_profile": person.student_profile,
+            })
+
+        return render(request, "core/people/partials/person_student_profile_edit.html", {
+            "person": person,
+            "student_profile": student_profile,
+            "form": form,
+        })
+
+    form = StudentProfileForm(instance=student_profile)
+    return render(request, "core/people/partials/person_student_profile_edit.html", {
+        "person": person,
+        "student_profile": student_profile,
+        "form": form,
     })
