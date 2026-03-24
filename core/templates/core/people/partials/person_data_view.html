@@ -1,10 +1,10 @@
 <div id="person-data-card">
+        
     <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
         <div>
             <h6 class="mb-1">Gegevens</h6>
             <div class="text-muted small">Persoons-, contact- en adresgegevens</div>
         </div>
-
         <button
             class="btn btn-sm btn-outline-secondary"
             hx-get="{% url 'people:data_edit_partial' person.id %}"
@@ -13,7 +13,11 @@
             Bewerken
         </button>
     </div>
-
+{% if person.person_type != "student" and student_profile %}
+            <div class="alert alert-warning mt-3 mb-3">
+                <small>Deze persoon is geen student meer, maar heeft nog wel een (oud) studentprofiel.</small>
+            </div>
+        {% endif %}
     <hr class="my-3">
 
     <div class="row g-3">
@@ -116,9 +120,7 @@
         <div class="col-12 col-md-6">
             <div class="text-muted small">Plaats</div>
             <div>{% if person.city %}{{ person.city }}{% else %}<span class="text-muted">–</span>{% endif %}</div>
-        </div>
-
-        
+        </div>      
 
         {% if employee_profile %}
             <div class="col-12">

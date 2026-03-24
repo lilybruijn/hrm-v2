@@ -4,32 +4,7 @@
 {% block page_title %}{{ person.first_name }} {{ person.last_name }}{% endblock %}
 
 {% block page_subtitle %}
-<div class="text-muted small">
-    {% if person.person_type == "student" %}
-        Student
-    {% elif person.person_type == "employee" %}
-        Medewerker
-    {% else %}
-        Persoon
-    {% endif %}
-    <span class="mx-2">•</span>
-    Aangemaakt: {{ person.created_at|date:"d-m-Y" }}
-
-    {% if person.is_archived %}
-        <span class="mx-2">•</span>
-        <span class="badge bg-danger-subtle text-danger">Gearchiveerd</span>
-    {% endif %}
-
-    {% if student_profile %}
-        <span class="mx-2">•</span>
-        <span class="badge bg-info-subtle text-info">Studentprofiel</span>
-    {% endif %}
-
-    {% if employee_profile %}
-        <span class="mx-2">•</span>
-        <span class="badge bg-success-subtle text-success">Medewerkerprofiel</span>
-    {% endif %}
-</div>
+    {% include "core/people/partials/person_header_subtitle.html" %}
 {% endblock %}
 
 {% block page_actions %}
@@ -50,62 +25,7 @@
 {% block content %}
 <div class="row g-4">
 
-    <div class="col-12 col-lg-7">
-    <div class="card shadow-sm h-100">
-        <div class="card-body">
-            <ul class="nav nav-tabs compact-tabs mb-3" id="personMainTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active"
-                            id="omschrijving-tab"
-                            data-bs-toggle="tab"
-                            data-bs-target="#omschrijving-pane"
-                            type="button"
-                            role="tab">
-                        Omschrijving
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link"
-                            id="gegevens-tab"
-                            data-bs-toggle="tab"
-                            data-bs-target="#gegevens-pane"
-                            type="button"
-                            role="tab">
-                        Gegevens
-                    </button>
-                </li>
-                {% if person.person_type == "student" or student_profile %}
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link"
-                            id="studentprofile-tab"
-                            data-bs-toggle="tab"
-                            data-bs-target="#studentprofile-pane"
-                            type="button"
-                            role="tab">
-                        Studiegegevens
-                    </button>
-                </li>
-                {% endif %}
-            </ul>
-
-            <div class="tab-content">
-                <div class="tab-pane fade show active" id="omschrijving-pane" role="tabpanel">
-                    {% include "core/people/partials/person_description_view.html" %}
-                </div>
-
-                <div class="tab-pane fade" id="gegevens-pane" role="tabpanel">
-                    {% include "core/people/partials/person_data_view.html" %}
-                </div>
-                
-                {% if person.person_type == "student" or student_profile %}
-                <div class="tab-pane fade" id="studentprofile-pane" role="tabpanel">
-                    {% include "core/people/partials/person_student_profile_view.html" %}
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
+    {% include "core/people/partials/person_main_card.html" %}
 
     <div class="col-12 col-lg-5">
         <div class="card shadow-sm h-100">

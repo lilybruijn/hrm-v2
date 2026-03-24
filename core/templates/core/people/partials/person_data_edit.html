@@ -10,7 +10,7 @@
 
     <form
         hx-post="{% url 'people:data_edit_partial' person.id %}"
-        hx-target="#person-data-card"
+        hx-target="#person-main-card"
         hx-swap="outerHTML"
         hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
         autocomplete="off">

@@ -1,0 +1,61 @@
+<div class="col-12 col-lg-7" id="person-main-card">
+    <div class="card shadow-sm h-100">
+        <div class="card-body">
+            <ul class="nav nav-tabs compact-tabs mb-3" id="personMainTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active"
+                            id="omschrijving-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#omschrijving-pane"
+                            type="button"
+                            role="tab">
+                        Omschrijving
+                    </button>
+                </li>
+
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link"
+                            id="gegevens-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#gegevens-pane"
+                            type="button"
+                            role="tab">
+                        Gegevens
+                    </button>
+                </li>
+
+                {% if person.person_type == "student" or student_profile %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link"
+                            id="studentprofile-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#studentprofile-pane"
+                            type="button"
+                            role="tab">
+                        Studiegegevens
+                        {% if person.person_type != "student" and student_profile %}
+                            <span class="badge bg-warning-subtle text-warning ms-2">oud profiel</span>
+                        {% endif %}
+                    </button>
+                </li>
+                {% endif %}
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="omschrijving-pane" role="tabpanel">
+                    {% include "core/people/partials/person_description_view.html" %}
+                </div>
+
+                <div class="tab-pane fade" id="gegevens-pane" role="tabpanel">
+                    {% include "core/people/partials/person_data_view.html" %}
+                </div>
+
+                {% if person.person_type == "student" or student_profile %}
+                <div class="tab-pane fade" id="studentprofile-pane" role="tabpanel">
+                    {% include "core/people/partials/person_student_profile_view.html" %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

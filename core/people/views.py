@@ -21,6 +21,23 @@ from core.signals.services import log_history
 from .student_forms import StudentProfileForm
 from core.models.people import Person, StudentProfile, EmployeeProfile
 
+def sync_person_profiles(person):
+    if person.person_type == "student":
+        student_profile, _ = StudentProfile.objects.get_or_create(person=person)
+        if not student_profile.is_active_student:
+            student_profile.is_active_student = True
+            student_profile.save(update_fields=["is_active_student"])
+
+        EmployeeProfile.objects.get_or_create(person=person)
+
+    elif person.person_type == "employee":
+        employee_profile, _ = EmployeeProfile.objects.get_or_create(person=person)
+
+        student_profile = getattr(person, "student_profile", None)
+        if student_profile and student_profile.is_active_student:
+            student_profile.is_active_student = False
+            student_profile.save(update_fields=["is_active_student"])
+
 def get_person_history(person):
     person_ct = ContentType.objects.get_for_model(Person)
 
@@ -268,6 +285,8 @@ def person_create(request):
             elif person.person_type == "employee":
                 EmployeeProfile.objects.get_or_create(person=person)
 
+            sync_person_profiles(person)
+
             log_history(person, request.user, "created", {})
             messages.success(request, "Persoon aangemaakt.")
             return redirect("people:detail", pk=person.pk)
@@ -326,7 +345,6 @@ def person_detail(request, pk: int):
 
     student_profile = getattr(person, "student_profile", None)
     employee_profile = getattr(person, "employee_profile", None)
-
 
     return render(request, "core/people/detail.html", {
         "person": person,
@@ -411,6 +429,7 @@ def person_update(request, pk: int):
         StudentProfile.objects.get_or_create(person=person)
     elif person.person_type == "employee":
         EmployeeProfile.objects.get_or_create(person=person)
+    sync_person_profiles(person)
         
     after = {
         "person_type": person.person_type,
@@ -608,11 +627,7 @@ def person_data_edit_partial(request, pk: int):
 
         if form.is_valid():
             person = form.save()
-
-            if person.person_type == "student":
-                StudentProfile.objects.get_or_create(person=person)
-            elif person.person_type == "employee":
-                EmployeeProfile.objects.get_or_create(person=person)
+            sync_person_profiles(person)
 
             after = {
                 "person_type": person.person_type,
@@ -632,13 +647,10 @@ def person_data_edit_partial(request, pk: int):
             if changes:
                 log_history(person, request.user, "updated", changes)
 
-            history = get_person_history(person)
-
-            return render(request, "core/people/partials/person_data_response.html", {
+            return render(request, "core/people/partials/person_main_card_response.html", {
                 "person": person,
                 "student_profile": getattr(person, "student_profile", None),
                 "employee_profile": getattr(person, "employee_profile", None),
-                "history": history,
             })
 
         return render(request, "core/people/partials/person_data_edit.html", {
@@ -707,3 +719,19 @@ def person_student_profile_edit_partial(request, pk: int):
         "student_profile": student_profile,
         "form": form,
     })
+
+@staff_required
+@require_POST
+def delete_student_profile(request, pk: int):
+    person = get_object_or_404(Person, pk=pk)
+
+    student_profile = getattr(person, "student_profile", None)
+    if not student_profile:
+        messages.warning(request, "Er is geen studentprofiel om te verwijderen.")
+        return redirect("people:detail", pk=person.pk)
+
+    student_profile.delete()
+    log_history(person, request.user, "deleted_student_profile", {})
+
+    messages.success(request, "Studentprofiel verwijderd.")
+    return redirect("people:detail", pk=person.pk)

@@ -1,0 +1,26 @@
+<div id="person-header-subtitle" class="text-muted small">
+    {% if person.person_type == "student" %}
+        Student
+    {% elif person.person_type == "employee" %}
+        Medewerker
+    {% else %}
+        Persoon
+    {% endif %}
+    <span class="mx-2">•</span>
+    Aangemaakt: {{ person.created_at|date:"d-m-Y" }}
+
+    {% if person.is_archived %}
+        <span class="mx-2">•</span>
+        <span class="badge bg-danger-subtle text-danger">Gearchiveerd</span>
+    {% endif %}
+
+    {% if person.person_type == "student" %}
+        <span class="mx-2">•</span>
+        <span class="badge bg-info-subtle text-info">Student</span>
+    {% endif %}
+
+    {% if person.person_type == "employee" %}
+        <span class="mx-2">•</span>
+        <span class="badge bg-success-subtle text-success">Medewerker</span>
+    {% endif %}
+</div>

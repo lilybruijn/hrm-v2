@@ -25,4 +25,6 @@ urlpatterns = [
 
     path("<int:pk>/partials/student-profile/", views.person_student_profile_view_partial, name="student_profile_view_partial"),
     path("<int:pk>/partials/student-profile/edit/", views.person_student_profile_edit_partial, name="student_profile_edit_partial"),
+
+    path("<int:pk>/student-profile/delete/", views.delete_student_profile, name="delete_student_profile"),
 ]
