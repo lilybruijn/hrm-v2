@@ -2,8 +2,7 @@
     <div class="sidebar-top">
         <a class="brand" href="{% url 'dashboard' %}">
             <span class="brand-dot"></span>
-            <span class="brand-text">HRM</span>
-            <span class="brand-badge">v2</span>
+            <span class="brand-text">HRM Systeem</span>
         </a>
 
         <button class="icon-btn sidebar-toggle" type="button" data-sidebar-toggle aria-label="Toggle menu">
@@ -36,11 +35,10 @@
 
             {% if perms.core.view_person %}
             <div class="nav-group {% if active_nav == 'people_students' or active_nav == 'people_employees' or active_nav == 'people_archived' %}open{% endif %}" data-nav-group>
-                <button
-                    class="nav-group-toggle {% if active_nav == 'people_students' or active_nav == 'people_employees' or active_nav == 'people_archived' %}active{% endif %}"
-                    type="button"
-                    data-nav-group-toggle
-                    aria-expanded="{% if active_nav == 'people_students' or active_nav == 'people_employees' or active_nav == 'people_archived' %}true{% else %}false{% endif %}">
+                <button class="nav-group-toggle {% if active_nav == 'people_students' or active_nav == 'people_employees' or active_nav == 'people_archived' %}active{% endif %}"
+                        type="button"
+                        data-nav-group-toggle
+                        aria-expanded="{% if active_nav == 'people_students' or active_nav == 'people_employees' or active_nav == 'people_archived' %}true{% else %}false{% endif %}">
                     <span class="nav-ico">👥</span>
                     <span>Personen</span>
                     <span class="nav-caret">▾</span>
