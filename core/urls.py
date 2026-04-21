@@ -34,6 +34,7 @@ urlpatterns = [
     path("notifications/", include("core.notifications.urls")),
 
     path("contacts/", include("core.contacts.urls")),
+    path("inbox/", include("core.inbox.urls", namespace="inbox")),
 ]
 
 if settings.DEBUG:
