@@ -22,7 +22,6 @@ from core.models import (
 )
 
 User = get_user_model()
-fake = Faker("nl_NL")
 
 
 class Command(BaseCommand):
@@ -37,13 +36,6 @@ class Command(BaseCommand):
         self.seed_types()
         self.seed_users()
 
-        people = self.seed_people()
-        organizations = self.seed_organizations()
-        signals = self.seed_signals(people)
-        self.seed_contact_people(people, organizations)
-        self.seed_tasks(people, signals)
-        self.seed_jobcoaching_periods(people, organizations)
-        self.seed_wage_value_periods(people, organizations)
 
         self.stdout.write(self.style.SUCCESS("Seeding klaar."))
 
