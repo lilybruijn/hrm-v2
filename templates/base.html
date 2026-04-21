@@ -1,10 +1,17 @@
 {% load static %}
 <!doctype html>
-<html lang="nl">
+<html lang="nl" data-theme="{{ request.user.profile.theme|default:'blue' }}">
 <head>
+    <script>
+        (function () {
+            const theme = localStorage.getItem('theme') || 'teal';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{% block title %}HRM{% endblock %}</title>
+    <title>{% block title %}HRM Systeem{% endblock %}</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,14 +36,14 @@
             {% include "core/partials/_navbar.html" %}
 
             {% if request.is_impersonating %}
-                <div class="alert alert-warning border border-yellow-300 text-yellow-900 px-4 py-3 rounded mb-4">
-                    Je bekijkt nu als <strong>{{ request.user.username }}</strong>
+            <div class="alert alert-warning border border-yellow-300 text-yellow-900 px-4 py-3 rounded mb-4">
+                Je bekijkt nu als <strong>{{ request.user.username }}</strong>
 
-                    <form method="post" action="{% url 'impersonation:stop' %}" style="display:inline;">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">Stop</button>
-                    </form>
-                </div>
+                <form method="post" action="{% url 'impersonation:stop' %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Stop</button>
+                </form>
+            </div>
             {% endif %}
 
             <main class="content">
@@ -73,18 +80,18 @@
 
     {% block extra_js %}
     <script>
-          document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll("[data-nav-group]").forEach(function (group) {
-        const toggle = group.querySelector("[data-nav-group-toggle]");
-        if (!toggle) return;
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll("[data-nav-group]").forEach(function (group) {
+                const toggle = group.querySelector("[data-nav-group-toggle]");
+                if (!toggle) return;
 
-        toggle.addEventListener("click", function () {
-            const isOpen = group.classList.contains("open");
-            group.classList.toggle("open", !isOpen);
-            toggle.setAttribute("aria-expanded", String(!isOpen));
+                toggle.addEventListener("click", function () {
+                    const isOpen = group.classList.contains("open");
+                    group.classList.toggle("open", !isOpen);
+                    toggle.setAttribute("aria-expanded", String(!isOpen));
+                });
+            });
         });
-    });
-});
         document.addEventListener("DOMContentLoaded", function () {
             document.querySelectorAll(".js-select").forEach(function (el) {
                 if (el.tomselect) return;
@@ -161,7 +168,21 @@
             if (archived) archived.checked = params.get("task_archived") === "1";
         });
 
+        document.addEventListener('DOMContentLoaded', function () {
+            const switcher = document.getElementById('theme-switcher');
+            const savedTheme = localStorage.getItem('theme') || 'teal';
 
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            if (switcher) {
+                switcher.value = savedTheme;
+
+                switcher.addEventListener('change', function () {
+                    const theme = this.value;
+                    document.documentElement.setAttribute('data-theme', theme);
+                    localStorage.setItem('theme', theme);
+                });
+            }
+        });
 
     </script>{% endblock %}
 </body>

@@ -4,11 +4,15 @@
 {% block page_subtitle %}<p class="muted">HRM Systeem Lily</p>{% endblock %}
 
 {% block page_actions %}
-<a class="btn btn-primary" href="{% url 'tasks:create' %}"" title="Nieuwe taak">Nieuwe taak</a>
+<a class="btn btn-primary" href="{% url 'tasks:create' %}" title="Nieuwe taak">Nieuwe taak</a>
+<a class="btn btn-primary" href="{% url 'signals:create' %}" title="Nieuwe taak">Nieuwe melding</a>
+<a class="btn btn-primary" href="{% url 'people:create' %}" title="Nieuwe taak">Nieuw persoon</a>
 {% endblock %}
 
 {% block content %}
 <div class="grid grid-3">
+
+    <!-- MELDINGEN -->
     <div class="card">
         <div class="card-head">
             <div>
@@ -18,43 +22,71 @@
             <div class="metric">{{ signals_open_count }}</div>
         </div>
         <div class="card-body">
-            <div class="muted">Hier komt straks het “open meldingen” overzicht.</div>
+            <div class="muted">
+                Aantal open meldingen in het systeem.
+            </div>
+
+            <div class="mt-3 stack">
+                <a class="btn btn-soft" href="{% url 'signals:list' %}">
+                    Bekijk meldingen
+                </a>
+                <a class="btn btn-soft" href="{% url 'signals:create' %}">
+                    Nieuwe melding
+                </a>
+            </div>
         </div>
     </div>
 
+    <!-- TAKEN -->
     <div class="card">
         <div class="card-head">
             <div>
                 <div class="card-kicker">Taken</div>
-                <div class="card-title">Binnenkort</div>
+                <div class="card-title">Open</div>
             </div>
             <div class="metric">{{ tasks_open_count }}</div>
         </div>
         <div class="card-body">
-            <div class="muted">Hier komt straks het “taken met deadline” blok.</div>
+            <div class="muted">
+                Openstaande taken (niet gearchiveerd).
+            </div>
+
+            <div class="mt-3 stack">
+                <a class="btn btn-soft" href="{% url 'tasks:list' %}">
+                    Bekijk taken
+                </a>
+                <a class="btn btn-soft" href="{% url 'tasks:create' %}">
+                    Nieuwe taak
+                </a>
+            </div>
         </div>
     </div>
 
+    <!-- INBOX (placeholder, maar netjes) -->
     <div class="card">
         <div class="card-head">
             <div>
                 <div class="card-kicker">Inbox</div>
-                <div class="card-title">Nieuw</div>
+                <div class="card-title">Berichten</div>
             </div>
-            <div class="metric">0</div>
+            <div class="metric">–</div>
         </div>
         <div class="card-body">
-            <div class="muted">Hier komt straks het berichten/inbox systeem. TEST</div>
+            <div class="muted">
+                Inbox functionaliteit komt later.
+            </div>
         </div>
     </div>
+
 </div>
 
 <div class="grid grid-2 mt-16">
 
+    <!-- PEOPLE -->
     <div class="card">
         <div class="card-head">
             <div>
-                <div class="card-kicker">People</div>
+                <div class="card-kicker">Personen</div>
                 <div class="card-title">Actief</div>
             </div>
             <div class="metric">{{ people_active_count }}</div>
@@ -63,15 +95,19 @@
             <div class="muted">
                 Actieve personen in het systeem.
             </div>
-            <div class="mt-3">
+
+            <div class="mt-3 stack">
                 <a class="btn btn-soft" href="{% url 'people:list' %}">
                     Bekijk personen
+                </a>
+                <a class="btn btn-soft" href="{% url 'people:create' %}">
+                    Nieuwe persoon
                 </a>
             </div>
         </div>
     </div>
 
-
+    <!-- SNELKOPPELINGEN -->
     <div class="card">
         <div class="card-head">
             <div>
@@ -80,12 +116,12 @@
         </div>
         <div class="card-body">
             <div class="stack">
-                <a class="btn btn-soft" href="/admin/">Open Admin Portal</a>
-                <a class="btn btn-soft" href="{% url 'signals:create' %}">Maak melding</a>
-                <a class="btn btn-soft" href="{% url 'tasks:create' %}" ">Maak taak</a>
+                <a class="btn btn-soft" href="{% url 'settings:index' %}">Instellingen</a>
+                <a class="btn btn-soft" href="{% url 'organizations:list' %}">Organisaties</a>
+                <a class="btn btn-soft" href="{% url 'contacts:list' %}">Contactpersonen</a>
             </div>
         </div>
-        </div>
     </div>
+
 </div>
 {% endblock %}
