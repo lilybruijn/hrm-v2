@@ -11,6 +11,7 @@ from .contacts import ContactPerson, PersonContact
 from .documents import DocumentTemplate, TemplateVariable, GeneratedDocument
 from .jobcoaching import JobCoachingPeriod
 from .wage_values import WageValuePeriod
+from .inbox import InboxThread, InboxParticipant, InboxMessage
 
 __all__ = [
     "Signal", "Task",
@@ -23,4 +24,7 @@ __all__ = [
     "DocumentTemplate", "TemplateVariable", "GeneratedDocument",
     "JobCoachingPeriod",
     "WageValuePeriod",
+    "InboxThread",
+    "InboxParticipant",
+    "InboxMessage",
 ]
